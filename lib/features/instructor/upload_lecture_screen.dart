@@ -46,13 +46,20 @@ class _UploadLectureScreenState extends State<UploadLectureScreen> {
 
   Future<void> _pickAudios() async {
     final result = await FilePicker.pickFiles(
-      type: FileType.custom,
-      allowedExtensions: ['mp3', 'ogg', 'wav', 'm4a', 'aac'],
+      type: FileType.any,
       withData: true,
       allowMultiple: true,
     );
     if (result != null && result.files.isNotEmpty) {
-      setState(() => _pickedAudios = [..._pickedAudios, ...result.files]);
+      final audioExts = ['mp3', 'ogg', 'wav', 'm4a', 'aac', 'mp4'];
+      final filtered =
+          result.files.where((f) {
+            final ext = f.name.split('.').last.toLowerCase();
+            return audioExts.contains(ext);
+          }).toList();
+      if (filtered.isNotEmpty) {
+        setState(() => _pickedAudios = [..._pickedAudios, ...filtered]);
+      }
     }
   }
 

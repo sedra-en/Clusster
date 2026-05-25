@@ -30,10 +30,29 @@ class _StudentQuizScreenState extends State<StudentQuizScreen> {
   int _currentIndex = 0;
   final Map<int, String> _answers = {};
   bool _submitting = false;
+  bool _showFeedback = false; // ✅ عرض التصحيح بعد الاختيار
   Map<String, dynamic>? _result;
 
   Map<String, dynamic> get _q =>
       widget.questions[_currentIndex] as Map<String, dynamic>;
+
+  String get _correctAnswer {
+    final q = _q;
+    final qType = q['type']?.toString().toUpperCase() ?? '';
+    if (qType == 'TF') return q['answer']?.toString() ?? '';
+    // للـ MCQ — الجواب هو المفتاح (أ،ب،ج،د) لكن بدنا نرجع النص
+    final correct = q['answer']?.toString() ?? q['correct']?.toString() ?? '';
+    var choices = q['choices'];
+    if (choices is String) {
+      try {
+        choices = json.decode(choices);
+      } catch (_) {}
+    }
+    if (choices is Map && choices.containsKey(correct)) {
+      return choices[correct].toString();
+    }
+    return correct;
+  }
 
   List get _options {
     var choices = _q['choices'];
@@ -53,6 +72,25 @@ class _StudentQuizScreenState extends State<StudentQuizScreen> {
 
   bool get _isLast => _currentIndex == widget.questions.length - 1;
   int get _answeredCount => _answers.length;
+
+  void _selectAnswer(String option) {
+    if (_showFeedback) return; // ما تسمحي بالتغيير بعد التصحيح
+    setState(() {
+      _answers[_currentIndex] = option;
+      _showFeedback = true; // اعرض التصحيح فوراً
+    });
+  }
+
+  void _goNext() {
+    if (_isLast) {
+      _submit();
+    } else {
+      setState(() {
+        _currentIndex++;
+        _showFeedback = false;
+      });
+    }
+  }
 
   Future<void> _submit() async {
     setState(() => _submitting = true);
@@ -195,6 +233,9 @@ class _StudentQuizScreenState extends State<StudentQuizScreen> {
   }
 
   Widget _questionView() {
+    final selected = _answers[_currentIndex];
+    final correct = _correctAnswer;
+
     return SingleChildScrollView(
       padding: const EdgeInsets.all(20),
       child: Column(
@@ -256,27 +297,130 @@ class _StudentQuizScreenState extends State<StudentQuizScreen> {
             ),
           ),
           const SizedBox(height: 10),
-          ..._options.map((e) => _optionTile(e.toString())),
+          ..._options.map((e) => _optionTile(e.toString(), selected, correct)),
+
+          // ✅ رسالة التصحيح
+          if (_showFeedback && selected != null) ...[
+            const SizedBox(height: 16),
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 300),
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color:
+                    selected == correct
+                        ? Colors.green.withOpacity(0.1)
+                        : Colors.red.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: selected == correct ? Colors.green : Colors.red,
+                  width: 1.5,
+                ),
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Text(
+                          selected == correct
+                              ? '✅ إجابة صحيحة!'
+                              : '❌ إجابة خاطئة',
+                          textAlign: TextAlign.right,
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color:
+                                selected == correct ? Colors.green : Colors.red,
+                            fontSize: 14,
+                          ),
+                        ),
+                        if (selected != correct) ...[
+                          const SizedBox(height: 6),
+                          Text(
+                            'الإجابة الصحيحة:',
+                            textAlign: TextAlign.right,
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: getSecondaryTextColor(context),
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Directionality(
+                            textDirection: ui.TextDirection.rtl,
+                            child: Text(
+                              correct,
+                              textAlign: TextAlign.right,
+                              style: const TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.green,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Icon(
+                    selected == correct
+                        ? Icons.check_circle_rounded
+                        : Icons.cancel_rounded,
+                    color: selected == correct ? Colors.green : Colors.red,
+                    size: 28,
+                  ),
+                ],
+              ),
+            ),
+          ],
         ],
       ),
     );
   }
 
-  Widget _optionTile(String option) {
-    final selected = _answers[_currentIndex] == option;
+  Widget _optionTile(String option, String? selected, String correct) {
+    final isSelected = selected == option;
+    final isCorrect = option == correct;
+
+    Color borderColor = Colors.grey.withOpacity(0.2);
+    Color bgColor = getCardColor(context);
+    Widget? trailingIcon;
+
+    if (_showFeedback) {
+      if (isCorrect) {
+        borderColor = Colors.green;
+        bgColor = Colors.green.withOpacity(0.1);
+        trailingIcon = const Icon(
+          Icons.check_circle_rounded,
+          color: Colors.green,
+          size: 20,
+        );
+      } else if (isSelected && !isCorrect) {
+        borderColor = Colors.red;
+        bgColor = Colors.red.withOpacity(0.1);
+        trailingIcon = const Icon(
+          Icons.cancel_rounded,
+          color: Colors.red,
+          size: 20,
+        );
+      }
+    } else if (isSelected) {
+      borderColor = widget.color;
+      bgColor = widget.color.withOpacity(0.15);
+    }
+
     return GestureDetector(
-      onTap: () => setState(() => _answers[_currentIndex] = option),
+      onTap: () => _selectAnswer(option),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
         margin: const EdgeInsets.only(bottom: 10),
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
-          color:
-              selected ? widget.color.withOpacity(0.15) : getCardColor(context),
+          color: bgColor,
           borderRadius: BorderRadius.circular(13),
           border: Border.all(
-            color: selected ? widget.color : Colors.grey.withOpacity(0.2),
-            width: selected ? 2 : 1,
+            color: borderColor,
+            width: (_showFeedback && (isCorrect || isSelected)) ? 2 : 1,
           ),
         ),
         child: Row(
@@ -289,28 +433,36 @@ class _StudentQuizScreenState extends State<StudentQuizScreen> {
                   textAlign: TextAlign.right,
                   style: GoogleFonts.poppins(
                     fontSize: 13,
-                    fontWeight: selected ? FontWeight.w600 : FontWeight.normal,
+                    fontWeight:
+                        isSelected || (_showFeedback && isCorrect)
+                            ? FontWeight.w600
+                            : FontWeight.normal,
                   ),
                 ),
               ),
             ),
             const SizedBox(width: 12),
-            Container(
-              width: 24,
-              height: 24,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: selected ? widget.color : Colors.transparent,
-                border: Border.all(
-                  color: selected ? widget.color : Colors.grey,
-                  width: 2,
+            trailingIcon ??
+                Container(
+                  width: 24,
+                  height: 24,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: isSelected ? widget.color : Colors.transparent,
+                    border: Border.all(
+                      color: isSelected ? widget.color : Colors.grey,
+                      width: 2,
+                    ),
+                  ),
+                  child:
+                      isSelected
+                          ? const Icon(
+                            Icons.check,
+                            color: Colors.white,
+                            size: 16,
+                          )
+                          : null,
                 ),
-              ),
-              child:
-                  selected
-                      ? const Icon(Icons.check, color: Colors.white, size: 16)
-                      : null,
-            ),
           ],
         ),
       ),
@@ -333,10 +485,14 @@ class _StudentQuizScreenState extends State<StudentQuizScreen> {
       ),
       child: Row(
         children: [
-          if (_currentIndex > 0)
+          if (_currentIndex > 0 && !_showFeedback)
             Expanded(
               child: ScaleButton(
-                onTap: () => setState(() => _currentIndex--),
+                onTap:
+                    () => setState(() {
+                      _currentIndex--;
+                      _showFeedback = _answers.containsKey(_currentIndex);
+                    }),
                 child: Container(
                   padding: const EdgeInsets.symmetric(vertical: 14),
                   decoration: BoxDecoration(
@@ -355,21 +511,21 @@ class _StudentQuizScreenState extends State<StudentQuizScreen> {
                 ),
               ),
             ),
-          if (_currentIndex > 0) const SizedBox(width: 10),
+          if (_currentIndex > 0 && !_showFeedback) const SizedBox(width: 10),
           Expanded(
             flex: 2,
             child: ScaleButton(
               onTap:
-                  !answered
-                      ? () {}
-                      : (_isLast
-                          ? (_submitting ? () {} : _submit)
-                          : () => setState(() => _currentIndex++)),
+                  _showFeedback
+                      ? (_submitting ? () {} : _goNext)
+                      : (!answered
+                          ? () {}
+                          : () => setState(() => _showFeedback = true)),
               child: Container(
                 padding: const EdgeInsets.symmetric(vertical: 14),
                 decoration: BoxDecoration(
                   gradient:
-                      answered
+                      (answered || _showFeedback)
                           ? LinearGradient(
                             colors: [
                               widget.color,
@@ -377,7 +533,10 @@ class _StudentQuizScreenState extends State<StudentQuizScreen> {
                             ],
                           )
                           : null,
-                  color: answered ? null : Colors.grey.withOpacity(0.3),
+                  color:
+                      (answered || _showFeedback)
+                          ? null
+                          : Colors.grey.withOpacity(0.3),
                   borderRadius: BorderRadius.circular(13),
                 ),
                 child: Center(
@@ -392,7 +551,9 @@ class _StudentQuizScreenState extends State<StudentQuizScreen> {
                             ),
                           )
                           : Text(
-                            _isLast ? 'submit_quiz'.tr() : 'next'.tr(),
+                            _showFeedback
+                                ? (_isLast ? 'submit_quiz'.tr() : 'next'.tr())
+                                : 'next'.tr(),
                             style: GoogleFonts.poppins(
                               fontSize: 14,
                               fontWeight: FontWeight.bold,

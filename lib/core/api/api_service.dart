@@ -2,7 +2,10 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 class ApiService {
-  static const String baseUrl = "http://192.168.1.106/cluster_api";
+  // للموبايل
+  static const String baseUrl = "http://192.168.1.103/cluster_api";
+  // للويب — شيلي التعليق لو بدك تشغلي على Edge
+  // static const String baseUrl = "http://localhost/cluster_api";
 
   static Map<String, String> get _headers => {
     "Content-Type": "application/json",
@@ -413,7 +416,7 @@ class ApiService {
     }
   }
 
-  // للدكتور — بيبعت role=instructor حتى يشوف المحتوى حتى لو غير منشور
+  // للدكتور — بيبعت role=instructor
   static Future<Map<String, dynamic>> getLectureAIContent(
     String lectureId,
   ) async {
@@ -479,6 +482,7 @@ class ApiService {
     }
   }
 
+  // ✅ timeout رفعناه لـ 120 دقيقة
   static Future<Map<String, dynamic>> generateAIContent(
     String lectureId,
   ) async {
@@ -489,7 +493,7 @@ class ApiService {
             headers: _headers,
             body: json.encode({"lecture_id": lectureId}),
           )
-          .timeout(const Duration(minutes: 30));
+          .timeout(const Duration(minutes: 120));
       return json.decode(res.body);
     } catch (e) {
       return {"status": "error", "message": "AI generation failed"};
@@ -564,7 +568,7 @@ class ApiService {
     }
   }
 
-  // للطالب — بيبعت role=student فيشوف بس المنشور
+  // للطالب — بيبعت role=student
   static Future<Map<String, dynamic>> getAIContent(String lectureId) async {
     try {
       final res = await http.get(
@@ -633,8 +637,7 @@ class ApiService {
       return {};
     }
   }
-  /// جلب إحصائيات الكويز لمقرر معيّن
-  /// يرجع: total_enrolled, unique_participants, lectures_with_quiz, lectures[]
+
   static Future<Map<String, dynamic>> getCourseQuizStats(
     String courseId,
   ) async {
@@ -651,8 +654,4 @@ class ApiService {
     }
   }
 }
-
-
-
-
 
