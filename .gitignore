@@ -51,3 +51,4 @@ cluster_api/uploads/
 *.pdf
 venv/
 __pycache__/
+backend/uploads/
