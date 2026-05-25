@@ -44,4 +44,10 @@ app.*.map.json
 /android/app/profile
 /android/app/release
 
+backend/uploads/
 cluster_api/uploads/
+*.mp4
+*.ogg
+*.pdf
+venv/
+__pycache__/
