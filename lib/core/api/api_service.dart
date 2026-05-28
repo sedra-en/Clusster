@@ -3,7 +3,7 @@ import 'package:http/http.dart' as http;
 
 class ApiService {
   // للموبايل
-  static const String baseUrl = "http://192.168.1.103/cluster_api";
+  static const String baseUrl = "http://172.20.10.3/cluster_api";
   // للويب — شيلي التعليق لو بدك تشغلي على Edge
   // static const String baseUrl = "http://localhost/cluster_api";
 
@@ -556,10 +556,15 @@ class ApiService {
     }
   }
 
-  static Future<List<dynamic>> getLectures(String courseId) async {
+  static Future<List<dynamic>> getLectures(
+    String courseId, {
+    String role = 'student',
+  }) async {
     try {
       final res = await http.get(
-        Uri.parse('$baseUrl/courses/get_lectures.php?course_id=$courseId'),
+        Uri.parse(
+          '$baseUrl/courses/get_lectures.php?course_id=$courseId&role=$role',
+        ),
         headers: _headers,
       );
       return json.decode(res.body)['data'] ?? [];
@@ -654,4 +659,3 @@ class ApiService {
     }
   }
 }
-

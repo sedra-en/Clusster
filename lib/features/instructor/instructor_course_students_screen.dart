@@ -230,7 +230,6 @@ class _InstructorCourseStudentsScreenState
       ),
       child: Column(
         children: [
-          // اسم الطالب
           Padding(
             padding: const EdgeInsets.all(14),
             child: Row(
@@ -271,8 +270,6 @@ class _InstructorCourseStudentsScreenState
               ],
             ),
           ),
-
-          // علامات المحاضرات
           if (_lectures.isNotEmpty) ...[
             const Divider(height: 1),
             Padding(

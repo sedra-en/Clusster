@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -124,6 +125,7 @@ class _InstructorLectureAIViewScreenState
     }
   }
 
+  // ✅ النشر يشتغل دايماً — مو بس أول مرة
   Future<void> _publish() async {
     final res = await ApiService.publishAIContent(widget.lectureId);
     if (!mounted) return;
@@ -704,8 +706,9 @@ class _InstructorLectureAIViewScreenState
           ),
         ),
         const SizedBox(height: 10),
+        // ✅ زر النشر يشتغل دايماً
         ScaleButton(
-          onTap: _isPublished ? () {} : _publish,
+          onTap: _publish,
           child: Container(
             padding: const EdgeInsets.symmetric(vertical: 14),
             decoration: BoxDecoration(
@@ -724,7 +727,7 @@ class _InstructorLectureAIViewScreenState
                 ),
                 const SizedBox(width: 8),
                 Text(
-                  _isPublished ? 'تم النشر للطلاب' : 'نشر للطلاب',
+                  _isPublished ? 'إعادة نشر للطلاب' : 'نشر للطلاب',
                   style: const TextStyle(
                     color: Colors.white,
                     fontWeight: FontWeight.bold,
@@ -823,13 +826,16 @@ class _InstructorLectureAIViewScreenState
                 onPressed: () => _showEditQuestionDialog(index, q),
               ),
               Expanded(
-                child: Text(
-                  question,
-                  textAlign: TextAlign.right,
-                  style: GoogleFonts.poppins(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                    height: 1.5,
+                child: Directionality(
+                  textDirection: ui.TextDirection.rtl,
+                  child: Text(
+                    question,
+                    textAlign: TextAlign.right,
+                    style: GoogleFonts.poppins(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      height: 1.5,
+                    ),
                   ),
                 ),
               ),
@@ -877,17 +883,20 @@ class _InstructorLectureAIViewScreenState
                 child: Row(
                   children: [
                     Expanded(
-                      child: Text(
-                        value,
-                        textAlign: TextAlign.right,
-                        style: GoogleFonts.poppins(
-                          fontSize: 12,
-                          fontWeight:
-                              isCorrect ? FontWeight.w600 : FontWeight.normal,
-                          color:
-                              isCorrect
-                                  ? Colors.green.shade800
-                                  : getTextColor(context),
+                      child: Directionality(
+                        textDirection: ui.TextDirection.rtl,
+                        child: Text(
+                          value,
+                          textAlign: TextAlign.right,
+                          style: GoogleFonts.poppins(
+                            fontSize: 12,
+                            fontWeight:
+                                isCorrect ? FontWeight.w600 : FontWeight.normal,
+                            color:
+                                isCorrect
+                                    ? Colors.green.shade800
+                                    : getTextColor(context),
+                          ),
                         ),
                       ),
                     ),
@@ -938,6 +947,23 @@ class _InstructorLectureAIViewScreenState
       text: q['answer']?.toString() ?? '',
     );
 
+    // استخراج الخيارات الحالية
+    var choices = q['choices'];
+    if (choices is String) {
+      try {
+        choices = json.decode(choices);
+      } catch (_) {}
+    }
+
+    final Map<String, TextEditingController> choiceControllers = {};
+    if (choices is Map) {
+      choices.forEach((key, value) {
+        choiceControllers[key.toString()] = TextEditingController(
+          text: value.toString(),
+        );
+      });
+    }
+
     showDialog(
       context: context,
       builder:
@@ -960,11 +986,35 @@ class _InstructorLectureAIViewScreenState
                     ),
                   ),
                   const SizedBox(height: 12),
+                  if (choiceControllers.isNotEmpty) ...[
+                    const Align(
+                      alignment: Alignment.centerRight,
+                      child: Text(
+                        'الخيارات:',
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    ...choiceControllers.entries.map(
+                      (entry) => Padding(
+                        padding: const EdgeInsets.only(bottom: 8),
+                        child: TextField(
+                          controller: entry.value,
+                          textAlign: TextAlign.right,
+                          decoration: InputDecoration(
+                            labelText: 'خيار ${entry.key}',
+                            border: const OutlineInputBorder(),
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                  ],
                   TextField(
                     controller: answerController,
                     textAlign: TextAlign.right,
                     decoration: const InputDecoration(
-                      labelText: 'الجواب الصحيح',
+                      labelText: 'الجواب الصحيح (مفتاح الخيار)',
                       border: OutlineInputBorder(),
                     ),
                   ),
@@ -983,6 +1033,14 @@ class _InstructorLectureAIViewScreenState
                     final updated = Map<String, dynamic>.from(q);
                     updated['question'] = questionController.text;
                     updated['answer'] = answerController.text;
+                    // حفظ الخيارات المعدلة
+                    if (choiceControllers.isNotEmpty) {
+                      final updatedChoices = <String, String>{};
+                      choiceControllers.forEach((key, ctrl) {
+                        updatedChoices[key] = ctrl.text;
+                      });
+                      updated['choices'] = updatedChoices;
+                    }
                     _editableQuiz[index] = updated;
                   });
                   Navigator.pop(context);

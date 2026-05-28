@@ -38,10 +38,11 @@ class _StudentCourseLecturesScreenState
 
   Future<void> _load() async {
     setState(() => _loading = true);
-    final data = await ApiService.getLectures(widget.courseId);
+    final data = await ApiService.getLectures(widget.courseId, role: 'student');
     if (mounted) {
       setState(() {
-        _lectures = data;
+        // ✅ بس المحاضرات المنشورة تظهر للطالب
+        _lectures = data.where((l) => l['has_ai']?.toString() == '1').toList();
         _loading = false;
       });
     }
@@ -56,20 +57,26 @@ class _StudentCourseLecturesScreenState
             children: [
               _buildHeader(),
               Expanded(
-                child: _loading
-                    ? const Center(child: CircularProgressIndicator())
-                    : RefreshIndicator(
-                        onRefresh: _load,
-                        child: _lectures.isEmpty
-                            ? _emptyState()
-                            : ListView.builder(
-                                padding:
-                                    const EdgeInsets.fromLTRB(20, 12, 20, 30),
-                                itemCount: _lectures.length,
-                                itemBuilder: (_, i) =>
-                                    _lectureCard(_lectures[i], i),
-                              ),
-                      ),
+                child:
+                    _loading
+                        ? const Center(child: CircularProgressIndicator())
+                        : RefreshIndicator(
+                          onRefresh: _load,
+                          child:
+                              _lectures.isEmpty
+                                  ? _emptyState()
+                                  : ListView.builder(
+                                    padding: const EdgeInsets.fromLTRB(
+                                      20,
+                                      12,
+                                      20,
+                                      30,
+                                    ),
+                                    itemCount: _lectures.length,
+                                    itemBuilder:
+                                        (_, i) => _lectureCard(_lectures[i], i),
+                                  ),
+                        ),
               ),
             ],
           ),
@@ -85,8 +92,7 @@ class _StudentCourseLecturesScreenState
         gradient: LinearGradient(
           colors: [widget.color, widget.color.withOpacity(0.7)],
         ),
-        borderRadius:
-            const BorderRadius.vertical(bottom: Radius.circular(28)),
+        borderRadius: const BorderRadius.vertical(bottom: Radius.circular(28)),
       ),
       child: Row(
         children: [
@@ -98,10 +104,7 @@ class _StudentCourseLecturesScreenState
                 color: Colors.white.withOpacity(0.25),
                 shape: BoxShape.circle,
               ),
-              child: const AppIconImage(
-                AppIcons.dashboard,
-                size: 18,
-              ),
+              child: const AppIconImage(AppIcons.dashboard, size: 18),
             ),
           ),
           const SizedBox(width: 14),
@@ -128,8 +131,7 @@ class _StudentCourseLecturesScreenState
             ),
           ),
           Container(
-            padding:
-                const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
             decoration: BoxDecoration(
               color: Colors.white.withOpacity(0.25),
               borderRadius: BorderRadius.circular(10),
@@ -152,19 +154,12 @@ class _StudentCourseLecturesScreenState
     return ListView(
       children: [
         const SizedBox(height: 100),
-        const Center(
-          child: AppIconImage(
-            AppIcons.pdf,
-            size: 80,
-          ),
-        ),
+        const Center(child: AppIconImage(AppIcons.pdf, size: 80)),
         const SizedBox(height: 12),
         Center(
           child: Text(
             'no_lectures_in_course'.tr(),
-            style: GoogleFonts.poppins(
-              color: getSecondaryTextColor(context),
-            ),
+            style: GoogleFonts.poppins(color: getSecondaryTextColor(context)),
           ),
         ),
         const SizedBox(height: 4),
@@ -182,11 +177,9 @@ class _StudentCourseLecturesScreenState
   }
 
   Widget _lectureCard(dynamic l, int index) {
-    final hasAI = l['has_ai']?.toString() == '1';
     final contentType = l['content_type']?.toString() ?? '';
 
     String typeIcon;
-
     switch (contentType) {
       case 'audio':
         typeIcon = AppIcons.microchip;
@@ -212,33 +205,26 @@ class _StudentCourseLecturesScreenState
             color: widget.color.withOpacity(0.08),
             blurRadius: 10,
             offset: const Offset(0, 3),
-          )
+          ),
         ],
       ),
       child: Material(
         color: Colors.transparent,
         child: InkWell(
           borderRadius: BorderRadius.circular(18),
-          onTap: hasAI
-              ? () => Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => StudentLectureAIScreen(
+          onTap:
+              () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder:
+                      (_) => StudentLectureAIScreen(
                         lectureId: l['id'].toString(),
                         lectureTitle: l['title'] ?? '',
                         studentId: widget.studentId,
                         color: widget.color,
                       ),
-                    ),
-                  )
-              : () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content:
-                          Text('ai_content_not_ready_yet'.tr()),
-                    ),
-                  );
-                },
+                ),
+              ),
           child: Container(
             decoration: BoxDecoration(
               gradient: LinearGradient(
@@ -273,8 +259,7 @@ class _StudentCourseLecturesScreenState
                   const SizedBox(width: 12),
                   Expanded(
                     child: Column(
-                      crossAxisAlignment:
-                          CrossAxisAlignment.start,
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
                           l['title'] ?? '',
@@ -294,34 +279,21 @@ class _StudentCourseLecturesScreenState
                               _typeLabel(contentType),
                               style: GoogleFonts.poppins(
                                 fontSize: 10,
-                                color: getSecondaryTextColor(
-                                    context),
+                                color: getSecondaryTextColor(context),
                               ),
                             ),
                             const SizedBox(width: 10),
-                            if (hasAI)
-                              AppMiniBadge3D(
-                                label: "AI ✓",
-                                iconPath: AppIcons.microchip,
-                                color: Colors.green,
-                              )
-                            else
-                              AppMiniBadge3D(
-                                label: 'preparing'.tr(),
-                                iconPath: AppIcons.warning,
-                                color: Colors.orange,
-                              ),
+                            AppMiniBadge3D(
+                              label: "AI ✓",
+                              iconPath: AppIcons.microchip,
+                              color: Colors.green,
+                            ),
                           ],
                         ),
                       ],
                     ),
                   ),
-                  AppIconImage(
-                    hasAI
-                        ? AppIcons.dashboard
-                        : AppIcons.warning,
-                    size: 16,
-                  ),
+                  AppIconImage(AppIcons.dashboard, size: 16),
                 ],
               ),
             ),
