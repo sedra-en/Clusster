@@ -11,6 +11,8 @@ from fastapi.responses import JSONResponse
 from sentence_transformers import SentenceTransformer
 from sklearn.metrics.pairwise import cosine_similarity
 from pydantic import BaseModel
+import os
+os.environ['TOKENIZERS_PARALLELISM'] = 'false'
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
@@ -37,7 +39,7 @@ print(f"[INFO] OCR     : {OCR_URL}")
 print(f"[INFO] Summary : {SUMMARY_URL}")
 print(f"[INFO] Quiz    : {QUIZ_URL}")
 
-embedder = SentenceTransformer('paraphrase-multilingual-MiniLM-L12-v2', device='cpu')
+embedder = SentenceTransformer('paraphrase-multilingual-MiniLM-L12-v2', device='cpu', cache_folder='/tmp/models')
 
 def get_session():
     session = requests.Session()
