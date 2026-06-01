@@ -2,9 +2,6 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 class ApiService {
-  // للموبايل
-  //static const String baseUrl = "http://172.20.10.3/cluster_api";
-  // للويب — شيلي التعليق لو بدك تشغلي على Edge
   static const String baseUrl = "http://localhost/cluster_api";
 
   static Map<String, String> get _headers => {
@@ -416,7 +413,7 @@ class ApiService {
     }
   }
 
-  // للدكتور — بيبعت role=instructor
+  // للدكتور — بيبعت role=instructor حتى يشوف المحتوى حتى لو غير منشور
   static Future<Map<String, dynamic>> getLectureAIContent(
     String lectureId,
   ) async {
@@ -482,7 +479,6 @@ class ApiService {
     }
   }
 
-  // ✅ timeout رفعناه لـ 120 دقيقة
   static Future<Map<String, dynamic>> generateAIContent(
     String lectureId,
   ) async {
@@ -493,7 +489,7 @@ class ApiService {
             headers: _headers,
             body: json.encode({"lecture_id": lectureId}),
           )
-          .timeout(const Duration(minutes: 120));
+          .timeout(const Duration(minutes: 30));
       return json.decode(res.body);
     } catch (e) {
       return {"status": "error", "message": "AI generation failed"};
@@ -556,15 +552,10 @@ class ApiService {
     }
   }
 
-  static Future<List<dynamic>> getLectures(
-    String courseId, {
-    String role = 'student',
-  }) async {
+  static Future<List<dynamic>> getLectures(String courseId) async {
     try {
       final res = await http.get(
-        Uri.parse(
-          '$baseUrl/courses/get_lectures.php?course_id=$courseId&role=$role',
-        ),
+        Uri.parse('$baseUrl/courses/get_lectures.php?course_id=$courseId'),
         headers: _headers,
       );
       return json.decode(res.body)['data'] ?? [];
@@ -573,7 +564,7 @@ class ApiService {
     }
   }
 
-  // للطالب — بيبعت role=student
+  // للطالب — بيبعت role=student فيشوف بس المنشور
   static Future<Map<String, dynamic>> getAIContent(String lectureId) async {
     try {
       final res = await http.get(
@@ -642,7 +633,8 @@ class ApiService {
       return {};
     }
   }
-
+  /// جلب إحصائيات الكويز لمقرر معيّن
+  /// يرجع: total_enrolled, unique_participants, lectures_with_quiz, lectures[]
   static Future<Map<String, dynamic>> getCourseQuizStats(
     String courseId,
   ) async {

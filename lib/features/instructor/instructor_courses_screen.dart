@@ -23,6 +23,9 @@ class _InstructorCoursesScreenState extends State<InstructorCoursesScreen> {
   bool _loading = true;
   List<dynamic> _courses = [];
 
+  // ⭐ اسم الدكتور — يُحمَّل مرة واحدة
+  String _userName = 'Instructor';
+
   @override
   void initState() {
     super.initState();
@@ -31,8 +34,21 @@ class _InstructorCoursesScreenState extends State<InstructorCoursesScreen> {
 
   Future<void> _load() async {
     setState(() => _loading = true);
-    final data = await ApiService.getInstructorCoursesByUser(widget.userId);
-    if (mounted) setState(() { _courses = data; _loading = false; });
+
+    // نحمّل المقررات والبروفايل بالتوازي
+    final results = await Future.wait([
+      ApiService.getInstructorCoursesByUser(widget.userId),
+      ApiService.getInstructorProfile(widget.userId),
+    ]);
+
+    if (mounted) {
+      setState(() {
+        _courses = results[0] as List<dynamic>;
+        final profile = results[1] as Map<String, dynamic>;
+        _userName = profile['full_name']?.toString() ?? 'Instructor';
+        _loading = false;
+      });
+    }
   }
 
   @override
@@ -186,6 +202,9 @@ class _InstructorCoursesScreenState extends State<InstructorCoursesScreen> {
                           courseId: c['id'].toString(),
                           courseTitle: c['title'] ?? '',
                           color: color,
+                          // ⭐⭐ هنا التعديل الأهم — نمرّر معرّفات الشات
+                          userId: widget.userId,
+                          userName: _userName,
                         ),
                       ),
                     ).then((_) => _load()),
