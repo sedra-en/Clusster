@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:cluster_app/core/app_keys.dart'; // ⭐ المفاتيح هنا
 import 'package:cluster_app/core/app_provider.dart';
 import 'package:cluster_app/features/auth/unified_login_screen.dart';
 
@@ -31,6 +32,8 @@ class MyApp extends StatelessWidget {
       child: Consumer<AppProvider>(
         builder: (context, appProvider, _) {
           return MaterialApp(
+            navigatorKey: appNavigatorKey,        // ⭐ من app_keys.dart
+            scaffoldMessengerKey: appScaffoldKey, // ⭐ من app_keys.dart
             debugShowCheckedModeBanner: false,
             title: 'Cluster Academy',
             localizationsDelegates: context.localizationDelegates,
