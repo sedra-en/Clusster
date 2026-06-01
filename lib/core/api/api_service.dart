@@ -3,9 +3,9 @@ import 'package:http/http.dart' as http;
 
 class ApiService {
   // للموبايل
-  static const String baseUrl = "http://172.20.10.3/cluster_api";
+  //static const String baseUrl = "http://172.20.10.3/cluster_api";
   // للويب — شيلي التعليق لو بدك تشغلي على Edge
-  // static const String baseUrl = "http://localhost/cluster_api";
+  static const String baseUrl = "http://localhost/cluster_api";
 
   static Map<String, String> get _headers => {
     "Content-Type": "application/json",
