@@ -1,4 +1,8 @@
 {
+  "provider": "php",
+  "start": {
+    "cmd": "php -S 0.0.0.0:$PORT -t ."
+  },
   "php": {
     "extensions": ["pdo_mysql", "mbstring", "mysqli"]
   }
