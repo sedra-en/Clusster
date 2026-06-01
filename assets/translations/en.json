@@ -427,7 +427,9 @@
   "view_summary": "View Summary",
   "ai_ready": "AI Ready",
   "ai_not_ready": "AI content not ready",
-  "ai_being_prepared": "Instructor is preparing AI content"
-}
+  "ai_being_prepared": "Instructor is preparing AI content",
+  
+   "no_summaries_yet": "No summaries yet"
 
   
+}
