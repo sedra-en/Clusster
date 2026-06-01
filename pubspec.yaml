@@ -38,6 +38,7 @@ dependencies:
 
   # Audio Recording
   record: ^6.2.0
+  url_launcher: ^6.3.2
 
 dev_dependencies:
   flutter_test:

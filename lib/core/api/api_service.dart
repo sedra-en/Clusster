@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 class ApiService {
-  static const String baseUrl = "http://localhost/cluster_api";
+  static const String baseUrl = "http://192.168.1.106/cluster_api";
 
   static Map<String, String> get _headers => {
     "Content-Type": "application/json",
@@ -633,6 +633,7 @@ class ApiService {
       return {};
     }
   }
+
   /// جلب إحصائيات الكويز لمقرر معيّن
   /// يرجع: total_enrolled, unique_participants, lectures_with_quiz, lectures[]
   static Future<Map<String, dynamic>> getCourseQuizStats(
@@ -651,3 +652,4 @@ class ApiService {
     }
   }
 }
+
