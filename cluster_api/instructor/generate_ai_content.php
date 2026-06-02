@@ -79,7 +79,7 @@ if (!empty($data->lecture_id)) {
 }
  
 function callOurAPI($filePath, $audioPath = null) {
-    $apiUrl     = "http://127.0.0.1:8000/process";
+    $apiUrl = "https://believable-balance-production-b275.up.railway.app/process";
     $postFields = [];
  
     if ($filePath && file_exists($filePath)) {

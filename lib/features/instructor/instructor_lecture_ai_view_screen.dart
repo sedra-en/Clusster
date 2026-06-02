@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -34,7 +35,6 @@ class _InstructorLectureAIViewScreenState
   String _selectedLevel = 'medium';
   late TabController _tabController;
 
-  // Controllers للتعديل
   final Map<String, TextEditingController> _summaryControllers = {
     'easy': TextEditingController(),
     'medium': TextEditingController(),
@@ -65,14 +65,12 @@ class _InstructorLectureAIViewScreenState
         _data = data;
         _loading = false;
         _isPublished = (_ai?['is_published']?.toString() == '1');
-        // تهيئة الـ controllers
         _summaryControllers['easy']!.text =
             _ai?['easy_summary']?.toString() ?? '';
         _summaryControllers['medium']!.text =
             _ai?['medium_summary']?.toString() ?? '';
         _summaryControllers['hard']!.text =
             _ai?['hard_summary']?.toString() ?? '';
-        // نسخة قابلة للتعديل من الكويز
         _editableQuiz = List<dynamic>.from(_quizQuestions);
       });
     }
@@ -127,6 +125,7 @@ class _InstructorLectureAIViewScreenState
     }
   }
 
+  // ✅ النشر يشتغل دايماً
   Future<void> _publish() async {
     final res = await ApiService.publishAIContent(widget.lectureId);
     if (!mounted) return;
@@ -189,7 +188,6 @@ class _InstructorLectureAIViewScreenState
     final lines = text.split('\n');
     final widgets = <Widget>[];
     bool titleFound = false;
-
     for (final line in lines) {
       final trimmed = line.trim();
       if (trimmed.isEmpty ||
@@ -199,7 +197,6 @@ class _InstructorLectureAIViewScreenState
       if (trimmed.contains('مستوى التلخيص')) continue;
       final cleaned = trimmed.replaceAll(RegExp(r'\s*\(\d+[^)]*\)'), '').trim();
       if (cleaned.isEmpty) continue;
-
       if (!titleFound) {
         titleFound = true;
         widgets.add(
@@ -218,7 +215,6 @@ class _InstructorLectureAIViewScreenState
         );
         continue;
       }
-
       if (cleaned.startsWith('* ')) {
         String content =
             cleaned.substring(2).replaceAll(RegExp(r'^JI\s*'), '').trim();
@@ -258,7 +254,6 @@ class _InstructorLectureAIViewScreenState
         );
         continue;
       }
-
       if (RegExp(r'^\d+\.').hasMatch(cleaned)) {
         final content = cleaned.replaceFirst(RegExp(r'^\d+\.\s*'), '').trim();
         if (content.isEmpty) continue;
@@ -293,7 +288,6 @@ class _InstructorLectureAIViewScreenState
         );
         continue;
       }
-
       if (cleaned.length < 50 &&
           !cleaned.endsWith('.') &&
           !cleaned.contains('،')) {
@@ -313,7 +307,6 @@ class _InstructorLectureAIViewScreenState
         );
         continue;
       }
-
       widgets.add(
         Padding(
           padding: const EdgeInsets.only(bottom: 4, right: 14),
@@ -325,7 +318,6 @@ class _InstructorLectureAIViewScreenState
         ),
       );
     }
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.end,
       children: widgets,
@@ -570,11 +562,11 @@ class _InstructorLectureAIViewScreenState
       children: [
         Row(
           children: [
-            _levelChip('easy', 'level_easy'.tr(), Colors.green),
+            _levelChip('easy', 'Basic', Colors.green),
             const SizedBox(width: 8),
-            _levelChip('medium', 'level_medium'.tr(), Colors.orange),
+            _levelChip('medium', 'Standard', Colors.orange),
             const SizedBox(width: 8),
-            _levelChip('hard', 'level_advanced'.tr(), Colors.red),
+            _levelChip('hard', 'Advanced', Colors.red),
           ],
         ),
         const SizedBox(height: 16),
@@ -594,7 +586,6 @@ class _InstructorLectureAIViewScreenState
             children: [
               Row(
                 children: [
-                  // زر تعديل / حفظ
                   IconButton(
                     icon: Icon(
                       _editingMode ? Icons.save_rounded : Icons.edit_rounded,
@@ -623,14 +614,17 @@ class _InstructorLectureAIViewScreenState
                     },
                   ),
                   const Spacer(),
-                  Text(
-                    'summary_for_level'.tr().replaceAll(
-                      '{level}',
-                      _levelLabel(_selectedLevel),
-                    ),
-                    style: GoogleFonts.poppins(
-                      fontSize: 14,
-                      fontWeight: FontWeight.bold,
+                  Flexible(
+                    child: Text(
+                      'summary_for_level'.tr().replaceAll(
+                        '{level}',
+                        _levelLabel(_selectedLevel),
+                      ),
+                      style: GoogleFonts.poppins(
+                        fontSize: 13,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ),
                   const SizedBox(width: 6),
@@ -708,12 +702,13 @@ class _InstructorLectureAIViewScreenState
           ),
         ),
         const SizedBox(height: 10),
+        // ✅ النشر يشتغل دايماً — أزرق دايماً
         ScaleButton(
-          onTap: _isPublished ? () {} : _publish,
+          onTap: _publish,
           child: Container(
             padding: const EdgeInsets.symmetric(vertical: 14),
             decoration: BoxDecoration(
-              color: _isPublished ? Colors.green : Colors.blue,
+              color: Colors.blue,
               borderRadius: BorderRadius.circular(12),
             ),
             child: Row(
@@ -728,7 +723,7 @@ class _InstructorLectureAIViewScreenState
                 ),
                 const SizedBox(width: 8),
                 Text(
-                  _isPublished ? 'تم النشر للطلاب' : 'نشر للطلاب',
+                  _isPublished ? 'إعادة نشر للطلاب' : 'نشر للطلاب',
                   style: const TextStyle(
                     color: Colors.white,
                     fontWeight: FontWeight.bold,
@@ -821,20 +816,22 @@ class _InstructorLectureAIViewScreenState
         children: [
           Row(
             children: [
-              // زر تعديل السؤال
               IconButton(
                 icon: const Icon(Icons.edit_rounded, size: 18),
                 color: widget.color,
                 onPressed: () => _showEditQuestionDialog(index, q),
               ),
               Expanded(
-                child: Text(
-                  question,
-                  textAlign: TextAlign.right,
-                  style: GoogleFonts.poppins(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                    height: 1.5,
+                child: Directionality(
+                  textDirection: ui.TextDirection.rtl,
+                  child: Text(
+                    question,
+                    textAlign: TextAlign.right,
+                    style: GoogleFonts.poppins(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      height: 1.5,
+                    ),
                   ),
                 ),
               ),
@@ -881,18 +878,21 @@ class _InstructorLectureAIViewScreenState
                 ),
                 child: Row(
                   children: [
-                    Expanded(
-                      child: Text(
-                        value,
-                        textAlign: TextAlign.right,
-                        style: GoogleFonts.poppins(
-                          fontSize: 12,
-                          fontWeight:
-                              isCorrect ? FontWeight.w600 : FontWeight.normal,
-                          color:
-                              isCorrect
-                                  ? Colors.green.shade800
-                                  : getTextColor(context),
+                    Flexible(
+                      child: Directionality(
+                        textDirection: ui.TextDirection.rtl,
+                        child: Text(
+                          value,
+                          textAlign: TextAlign.right,
+                          style: GoogleFonts.poppins(
+                            fontSize: 12,
+                            fontWeight:
+                                isCorrect ? FontWeight.w600 : FontWeight.normal,
+                            color:
+                                isCorrect
+                                    ? Colors.green.shade800
+                                    : getTextColor(context),
+                          ),
                         ),
                       ),
                     ),
@@ -935,6 +935,7 @@ class _InstructorLectureAIViewScreenState
     );
   }
 
+  // ✅ تعديل السؤال + الخيارات + الجواب الصحيح
   void _showEditQuestionDialog(int index, Map q) {
     final questionController = TextEditingController(
       text: q['question']?.toString() ?? '',
@@ -942,6 +943,21 @@ class _InstructorLectureAIViewScreenState
     final answerController = TextEditingController(
       text: q['answer']?.toString() ?? '',
     );
+
+    var choices = q['choices'];
+    if (choices is String) {
+      try {
+        choices = json.decode(choices);
+      } catch (_) {}
+    }
+    final Map<String, TextEditingController> choiceControllers = {};
+    if (choices is Map) {
+      choices.forEach((key, value) {
+        choiceControllers[key.toString()] = TextEditingController(
+          text: value.toString(),
+        );
+      });
+    }
 
     showDialog(
       context: context,
@@ -965,11 +981,35 @@ class _InstructorLectureAIViewScreenState
                     ),
                   ),
                   const SizedBox(height: 12),
+                  if (choiceControllers.isNotEmpty) ...[
+                    const Align(
+                      alignment: Alignment.centerRight,
+                      child: Text(
+                        'الخيارات:',
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    ...choiceControllers.entries.map(
+                      (entry) => Padding(
+                        padding: const EdgeInsets.only(bottom: 8),
+                        child: TextField(
+                          controller: entry.value,
+                          textAlign: TextAlign.right,
+                          decoration: InputDecoration(
+                            labelText: 'خيار ${entry.key}',
+                            border: const OutlineInputBorder(),
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                  ],
                   TextField(
                     controller: answerController,
                     textAlign: TextAlign.right,
                     decoration: const InputDecoration(
-                      labelText: 'الجواب الصحيح',
+                      labelText: 'الجواب الصحيح (مفتاح الخيار)',
                       border: OutlineInputBorder(),
                     ),
                   ),
@@ -988,6 +1028,13 @@ class _InstructorLectureAIViewScreenState
                     final updated = Map<String, dynamic>.from(q);
                     updated['question'] = questionController.text;
                     updated['answer'] = answerController.text;
+                    if (choiceControllers.isNotEmpty) {
+                      final updatedChoices = <String, String>{};
+                      choiceControllers.forEach((key, ctrl) {
+                        updatedChoices[key] = ctrl.text;
+                      });
+                      updated['choices'] = updatedChoices;
+                    }
                     _editableQuiz[index] = updated;
                   });
                   Navigator.pop(context);
@@ -1003,11 +1050,11 @@ class _InstructorLectureAIViewScreenState
   String _levelLabel(String l) {
     switch (l) {
       case 'easy':
-        return 'level_easy'.tr();
+        return 'Basic';
       case 'medium':
-        return 'level_medium'.tr();
+        return 'Standard';
       case 'hard':
-        return 'level_advanced'.tr();
+        return 'Advanced';
       default:
         return l;
     }

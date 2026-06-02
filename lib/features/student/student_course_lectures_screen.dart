@@ -4,11 +4,10 @@
 // ============================================================
 
 import 'dart:async';
-// ignore: avoid_web_libraries_in_flutter
-import 'dart:html' as html;
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:cluster_app/shared/shared_ui.dart';
 import 'package:cluster_app/core/api/api_service.dart';
 import 'package:cluster_app/core/api/chat_api.dart';
@@ -88,13 +87,12 @@ class _StudentCourseLecturesScreenState
       if (rawPerCourse is Map) {
         perCourse = Map<String, dynamic>.from(rawPerCourse);
       }
-      final count = perCourse[courseIdInt.toString()] ??
-          perCourse[courseIdInt] ?? 0;
+      final count =
+          perCourse[courseIdInt.toString()] ?? perCourse[courseIdInt] ?? 0;
       if (mounted) {
         setState(() {
-          _unreadCount = (count is int)
-              ? count
-              : int.tryParse(count.toString()) ?? 0;
+          _unreadCount =
+              (count is int) ? count : int.tryParse(count.toString()) ?? 0;
         });
       }
     } catch (_) {}
@@ -107,22 +105,31 @@ class _StudentCourseLecturesScreenState
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (_) => CourseChatScreen(
-          courseId: courseIdInt,
-          userId: userIdInt,
-          userName: widget.userName ?? 'Student',
-          userRole: 'student',
-          courseTitle: widget.courseTitle,
-          color: widget.color,
-        ),
+        builder:
+            (_) => CourseChatScreen(
+              courseId: courseIdInt,
+              userId: userIdInt,
+              userName: widget.userName ?? 'Student',
+              userRole: 'student',
+              courseTitle: widget.courseTitle,
+              color: widget.color,
+            ),
       ),
     ).then((_) => _loadUnreadCount());
   }
 
-  // ⭐ فتح PDF مباشرة في المتصفح
-  void _openPdf(String filePath) {
+  Future<void> _openPdf(String filePath) async {
     final url = '${ApiService.baseUrl}/uploads/$filePath';
-    html.window.open(url, '_blank');
+    final uri = Uri.parse(url);
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    } else {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('cannot_open_file'.tr())));
+      }
+    }
   }
 
   @override
@@ -154,7 +161,9 @@ class _StudentCourseLecturesScreenState
                   labelColor: Colors.white,
                   unselectedLabelColor: getSecondaryTextColor(context),
                   labelStyle: GoogleFonts.poppins(
-                      fontSize: 12, fontWeight: FontWeight.bold),
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                  ),
                   tabs: [
                     Tab(
                       icon: const Icon(Icons.menu_book_rounded, size: 18),
@@ -168,15 +177,13 @@ class _StudentCourseLecturesScreenState
                 ),
               ),
               Expanded(
-                child: _loading
-                    ? const Center(child: CircularProgressIndicator())
-                    : TabBarView(
-                        controller: _tabController,
-                        children: [
-                          _lecturesTab(),
-                          _summariesTab(),
-                        ],
-                      ),
+                child:
+                    _loading
+                        ? const Center(child: CircularProgressIndicator())
+                        : TabBarView(
+                          controller: _tabController,
+                          children: [_lecturesTab(), _summariesTab()],
+                        ),
               ),
             ],
           ),
@@ -188,12 +195,12 @@ class _StudentCourseLecturesScreenState
 
   // ─── تبويب المحاضرات (PDF فقط) ──────────────────────────
   Widget _lecturesTab() {
-    // فلتر: يظهر فقط المحاضرات التي عندها file_path (PDF)
-    final pdfLectures = _lectures.where((l) {
-      final fp = l['file_path']?.toString() ?? '';
-      final ct = l['content_type']?.toString() ?? '';
-      return fp.isNotEmpty && ct != 'audio';
-    }).toList();
+    final pdfLectures =
+        _lectures.where((l) {
+          final fp = l['file_path']?.toString() ?? '';
+          final ct = l['content_type']?.toString() ?? '';
+          return fp.isNotEmpty && ct != 'audio';
+        }).toList();
 
     if (pdfLectures.isEmpty) {
       return _emptyState('no_lectures_in_course'.tr(), AppIcons.pdf);
@@ -230,67 +237,66 @@ class _StudentCourseLecturesScreenState
         color: Colors.transparent,
         child: InkWell(
           borderRadius: BorderRadius.circular(18),
-          onTap: filePath.isNotEmpty
-              ? () => _openPdf(filePath)
-              : null,
+          onTap: filePath.isNotEmpty ? () => _openPdf(filePath) : null,
           child: Padding(
             padding: const EdgeInsets.all(14),
-            child: Row(children: [
-              // رقم المحاضرة
-              Container(
-                width: 44, height: 44,
-                alignment: Alignment.center,
-                decoration: BoxDecoration(
-                  color: widget.color.withOpacity(0.12),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Text(
-                  '${index + 1}',
-                  style: TextStyle(
-                    color: widget.color,
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
+            child: Row(
+              children: [
+                Container(
+                  width: 44,
+                  height: 44,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    color: widget.color.withOpacity(0.12),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Text(
+                    '${index + 1}',
+                    style: TextStyle(
+                      color: widget.color,
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
-              ),
-              const SizedBox(width: 12),
-              // عنوان المحاضرة
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      l['title'] ?? '',
-                      style: GoogleFonts.poppins(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 13,
-                      ),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 4),
-                    Row(children: [
-                      Icon(Icons.picture_as_pdf_rounded,
-                          size: 14, color: Colors.red.shade700),
-                      const SizedBox(width: 4),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
                       Text(
-                        'type_pdf'.tr(),
+                        l['title'] ?? '',
                         style: GoogleFonts.poppins(
-                          fontSize: 10,
-                          color: getSecondaryTextColor(context),
+                          fontWeight: FontWeight.bold,
+                          fontSize: 13,
                         ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
                       ),
-                    ]),
-                  ],
+                      const SizedBox(height: 4),
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.picture_as_pdf_rounded,
+                            size: 14,
+                            color: Colors.red.shade700,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            'type_pdf'.tr(),
+                            style: GoogleFonts.poppins(
+                              fontSize: 10,
+                              color: getSecondaryTextColor(context),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-              // أيقونة الفتح
-              Icon(
-                Icons.open_in_new_rounded,
-                color: widget.color,
-                size: 20,
-              ),
-            ]),
+                Icon(Icons.open_in_new_rounded, color: widget.color, size: 20),
+              ],
+            ),
           ),
         ),
       ),
@@ -299,9 +305,10 @@ class _StudentCourseLecturesScreenState
 
   // ─── تبويب الملخصات ──────────────────────────────────────
   Widget _summariesTab() {
-    final aiLectures = _lectures.where((l) {
-      return l['has_ai']?.toString() == '1';
-    }).toList();
+    final aiLectures =
+        _lectures.where((l) {
+          return l['has_ai']?.toString() == '1';
+        }).toList();
 
     if (aiLectures.isEmpty) {
       return _emptyState('no_summaries_yet'.tr(), AppIcons.microchip);
@@ -336,79 +343,97 @@ class _StudentCourseLecturesScreenState
         color: Colors.transparent,
         child: InkWell(
           borderRadius: BorderRadius.circular(18),
-          onTap: () => Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (_) => StudentLectureAIScreen(
-                lectureId: l['id'].toString(),
-                lectureTitle: l['title'] ?? '',
-                studentId: widget.studentId,
-                color: widget.color,
+          onTap:
+              () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder:
+                      (_) => StudentLectureAIScreen(
+                        lectureId: l['id'].toString(),
+                        lectureTitle: l['title'] ?? '',
+                        studentId: widget.studentId,
+                        color: widget.color,
+                      ),
+                ),
               ),
-            ),
-          ),
           child: Padding(
             padding: const EdgeInsets.all(14),
-            child: Row(children: [
-              // أيقونة AI
-              Container(
-                width: 44, height: 44,
-                decoration: BoxDecoration(
-                  color: Colors.green.withOpacity(0.12),
-                  borderRadius: BorderRadius.circular(12),
+            child: Row(
+              children: [
+                Container(
+                  width: 44,
+                  height: 44,
+                  decoration: BoxDecoration(
+                    color: Colors.green.withOpacity(0.12),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Icon(
+                    Icons.auto_awesome_rounded,
+                    color: Colors.green,
+                    size: 22,
+                  ),
                 ),
-                child: const Icon(Icons.auto_awesome_rounded,
-                    color: Colors.green, size: 22),
-              ),
-              const SizedBox(width: 12),
-              // عنوان المحاضرة
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      l['title'] ?? '',
-                      style: GoogleFonts.poppins(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 13,
-                      ),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 4),
-                    Row(children: [
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 7, vertical: 2),
-                        decoration: BoxDecoration(
-                          color: Colors.green.withOpacity(0.12),
-                          borderRadius: BorderRadius.circular(6),
-                          border: Border.all(
-                              color: Colors.green.withOpacity(0.3)),
-                        ),
-                        child: const Text(
-                          'AI ✓',
-                          style: TextStyle(
-                              color: Colors.green,
-                              fontSize: 10,
-                              fontWeight: FontWeight.bold),
-                        ),
-                      ),
-                      const SizedBox(width: 8),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
                       Text(
-                        'tap_to_view_summary'.tr(),
+                        l['title'] ?? '',
                         style: GoogleFonts.poppins(
-                          fontSize: 10,
-                          color: getSecondaryTextColor(context),
+                          fontWeight: FontWeight.bold,
+                          fontSize: 13,
                         ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
                       ),
-                    ]),
-                  ],
+                      const SizedBox(height: 4),
+                      Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 7,
+                              vertical: 2,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.green.withOpacity(0.12),
+                              borderRadius: BorderRadius.circular(6),
+                              border: Border.all(
+                                color: Colors.green.withOpacity(0.3),
+                              ),
+                            ),
+                            child: const Text(
+                              'AI ✓',
+                              style: TextStyle(
+                                color: Colors.green,
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Flexible(
+                            child: Text(
+                              'tap_to_view_summary'.tr(),
+                              style: GoogleFonts.poppins(
+                                fontSize: 10,
+                                color: getSecondaryTextColor(context),
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-              const Icon(Icons.chevron_right_rounded,
-                  color: Colors.grey, size: 20),
-            ]),
+                const Icon(
+                  Icons.chevron_right_rounded,
+                  color: Colors.grey,
+                  size: 20,
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -417,16 +442,19 @@ class _StudentCourseLecturesScreenState
 
   // ─── Helpers ─────────────────────────────────────────────
   Widget _emptyState(String text, String icon) {
-    return ListView(children: [
-      const SizedBox(height: 80),
-      Center(child: AppIconImage(icon, size: 70)),
-      const SizedBox(height: 12),
-      Center(
-        child: Text(text,
-            style: GoogleFonts.poppins(
-                color: getSecondaryTextColor(context))),
-      ),
-    ]);
+    return ListView(
+      children: [
+        const SizedBox(height: 80),
+        Center(child: AppIconImage(icon, size: 70)),
+        const SizedBox(height: 12),
+        Center(
+          child: Text(
+            text,
+            style: GoogleFonts.poppins(color: getSecondaryTextColor(context)),
+          ),
+        ),
+      ],
+    );
   }
 
   Widget _buildHeader() {
@@ -434,51 +462,67 @@ class _StudentCourseLecturesScreenState
       padding: const EdgeInsets.fromLTRB(20, 10, 20, 18),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-            colors: [widget.color, widget.color.withOpacity(0.7)]),
-        borderRadius:
-            const BorderRadius.vertical(bottom: Radius.circular(28)),
-      ),
-      child: Row(children: [
-        GestureDetector(
-          onTap: () => Navigator.pop(context),
-          child: Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.25),
-                shape: BoxShape.circle),
-            child: const Icon(Icons.arrow_back_ios_new_rounded,
-                color: Colors.white, size: 18),
-          ),
+          colors: [widget.color, widget.color.withOpacity(0.7)],
         ),
-        const SizedBox(width: 14),
-        Expanded(
-          child: Column(
+        borderRadius: const BorderRadius.vertical(bottom: Radius.circular(28)),
+      ),
+      child: Row(
+        children: [
+          GestureDetector(
+            onTap: () => Navigator.pop(context),
+            child: Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.25),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.arrow_back_ios_new_rounded,
+                color: Colors.white,
+                size: 18,
+              ),
+            ),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('lectures'.tr(),
-                    style: GoogleFonts.poppins(
-                        color: Colors.white,
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold)),
-                Text(widget.courseTitle,
-                    style: TextStyle(
-                        color: Colors.white.withOpacity(0.85),
-                        fontSize: 12)),
-              ]),
-        ),
-        Container(
-          padding:
-              const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-          decoration: BoxDecoration(
+                Text(
+                  'lectures'.tr(),
+                  style: GoogleFonts.poppins(
+                    color: Colors.white,
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                Text(
+                  widget.courseTitle,
+                  style: TextStyle(
+                    color: Colors.white.withOpacity(0.85),
+                    fontSize: 12,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+            decoration: BoxDecoration(
               color: Colors.white.withOpacity(0.25),
-              borderRadius: BorderRadius.circular(10)),
-          child: Text('${_lectures.length}',
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Text(
+              '${_lectures.length}',
               style: const TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 14)),
-        ),
-      ]),
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+                fontSize: 14,
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -490,15 +534,23 @@ class _StudentCourseLecturesScreenState
           onPressed: _openChat,
           backgroundColor: widget.color,
           elevation: 6,
-          icon: Image.asset('assets/icons/icons8-message.gif',
-              width: 24, height: 24),
-          label: Text('course_chat'.tr(),
-              style: GoogleFonts.poppins(
-                  color: Colors.white, fontWeight: FontWeight.bold)),
+          icon: Image.asset(
+            'assets/icons/icons8-message.gif',
+            width: 24,
+            height: 24,
+          ),
+          label: Text(
+            'course_chat'.tr(),
+            style: GoogleFonts.poppins(
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
         ),
         if (_unreadCount > 0)
           Positioned(
-            top: -4, right: -4,
+            top: -4,
+            right: -4,
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
               decoration: BoxDecoration(
@@ -506,14 +558,14 @@ class _StudentCourseLecturesScreenState
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(color: Colors.white, width: 2),
               ),
-              constraints:
-                  const BoxConstraints(minWidth: 22, minHeight: 22),
+              constraints: const BoxConstraints(minWidth: 22, minHeight: 22),
               child: Text(
                 _unreadCount > 99 ? '99+' : _unreadCount.toString(),
                 style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 10,
-                    fontWeight: FontWeight.bold),
+                  color: Colors.white,
+                  fontSize: 10,
+                  fontWeight: FontWeight.bold,
+                ),
                 textAlign: TextAlign.center,
               ),
             ),

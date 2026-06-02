@@ -2,8 +2,11 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 class ApiService {
-  ///static const String baseUrl = "http://192.168.1.106/cluster_api";
-  static const String baseUrl = 'http://localhost/cluster_api';
+  ///static const String baseUrl = "https://clusster-production.up.railway.app";
+
+  static const String baseUrl = "http://192.168.1.106/cluster_api";
+
+  ///static const String baseUrl = 'http://localhost/cluster_api';
 
   static Map<String, String> get _headers => {
     "Content-Type": "application/json",
@@ -653,4 +656,3 @@ class ApiService {
     }
   }
 }
-
