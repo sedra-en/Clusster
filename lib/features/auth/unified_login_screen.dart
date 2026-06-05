@@ -113,7 +113,6 @@ class _UnifiedLoginScreenState extends State<UnifiedLoginScreen> {
     );
   }
 
-  // ✅ Email Field
   Widget _buildEmailField() {
     return Container(
       decoration: _inputDecoration(),
@@ -141,7 +140,6 @@ class _UnifiedLoginScreenState extends State<UnifiedLoginScreen> {
     );
   }
 
-  // ✅ Password Field
   Widget _buildPasswordField() {
     return Container(
       decoration: _inputDecoration(),
@@ -179,7 +177,6 @@ class _UnifiedLoginScreenState extends State<UnifiedLoginScreen> {
     );
   }
 
-  // ✅ Login Button
   Widget _buildLoginButton() {
     return ScaleButton(
       onTap: _isLoading ? () {} : _login,
@@ -215,7 +212,6 @@ class _UnifiedLoginScreenState extends State<UnifiedLoginScreen> {
     );
   }
 
-  // ✅ Activate Button
   Widget _buildActivateButton() {
     return GestureDetector(
       onTap:
@@ -249,7 +245,6 @@ class _UnifiedLoginScreenState extends State<UnifiedLoginScreen> {
     );
   }
 
-  // ✅ Decoration مشتركة
   BoxDecoration _inputDecoration() {
     return BoxDecoration(
       color: getCardColor(context),

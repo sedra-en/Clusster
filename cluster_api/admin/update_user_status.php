@@ -15,14 +15,14 @@ if (empty($data->user_id) || empty($data->status)) {
     sendError("user_id و status مطلوبين");
 }
 
-// قبول القيم الصحيحة فقط
+
 $allowed = ['active', 'pending', 'blocked'];
 if (!in_array($data->status, $allowed, true)) {
     sendError("status غير صالح. القيم المسموحة: active, pending, blocked");
 }
 
 try {
-    // منع تعديل حساب الأدمن نفسه عن طريق هذا الـ endpoint
+    
     $check = $db->prepare("SELECT role FROM users WHERE id = ?");
     $check->execute([$data->user_id]);
     $row = $check->fetch(PDO::FETCH_ASSOC);

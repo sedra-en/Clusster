@@ -1,76 +1,50 @@
-// ============================================================
-// AppIcons — مكتبة الأيقونات والـ Widgets الموحّدة للتطبيق
-// ============================================================
-//
-// تحتوي على:
-//   1. AppIcons     — مسارات كل الأيقونات
-//   2. AppIconImage — Widget عرض أيقونة
-//   3. AppIconButton3D — زر أيقونة احترافي
-//   4. AppStatCard3D — بطاقة إحصائية
-//   5. AppMiniBadge3D — شارة صغيرة
-//   6. AppLogoutDialog — حوار خروج جاهز
-//   7. AppSectionHeader — عنوان قسم بأيقونة
-//
-// ============================================================
-
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-// ============================================================
-// 1) AppIcons — مسارات كل الأيقونات
-// ============================================================
 class AppIcons {
   AppIcons._();
 
   static const String _base = 'assets/icons/';
 
   // Navigation & Header
-  static const String profile      = '${_base}profile.png';
-  static const String user         = '${_base}user.png';
-  static const String settings     = '${_base}settings.png';
-  static const String logout       = '${_base}logout.png';
+  static const String profile = '${_base}profile.png';
+  static const String user = '${_base}user.png';
+  static const String settings = '${_base}settings.png';
+  static const String logout = '${_base}logout.png';
   static const String notification = '${_base}notification-bell.png';
-  static const String search       = '${_base}search.png';
+  static const String search = '${_base}search.png';
 
   // Dashboard & Statistics
-  static const String dashboard  = '${_base}dashboard.png';
-  static const String book       = '${_base}book.png';
-  static const String education  = '${_base}education.png';
-  static const String business   = '${_base}business.png';
-  static const String event      = '${_base}event.png';
+  static const String dashboard = '${_base}dashboard.png';
+  static const String book = '${_base}book.png';
+  static const String education = '${_base}education.png';
+  static const String business = '${_base}business.png';
+  static const String event = '${_base}event.png';
 
   // AI & Lectures
   static const String microchip = '${_base}microchip.png';
-  static const String pdf       = '${_base}pdf.png';
-  static const String upload    = '${_base}upload.png';
+  static const String pdf = '${_base}pdf.png';
+  static const String upload = '${_base}upload.png';
 
   // Quiz & Results
   static const String checkMark = '${_base}check-mark.png';
-  static const String warning   = '${_base}warning.png';
+  static const String warning = '${_base}warning.png';
 
   // Users & Roles
-  static const String teacher    = '${_base}teacher.png';
-  static const String community  = '${_base}community.png';
-  static const String deskChair  = '${_base}desk-chair.png';
+  static const String teacher = '${_base}teacher.png';
+  static const String community = '${_base}community.png';
+  static const String deskChair = '${_base}desk-chair.png';
 
   // Actions
   static const String delete = '${_base}delete.png';
 }
 
-// ============================================================
-// 2) AppIconImage — Widget عرض الأيقونة
-// ============================================================
 class AppIconImage extends StatelessWidget {
   final String path;
   final double size;
   final Color? color;
 
-  const AppIconImage(
-    this.path, {
-    super.key,
-    this.size = 24,
-    this.color,
-  });
+  const AppIconImage(this.path, {super.key, this.size = 24, this.color});
 
   @override
   Widget build(BuildContext context) {
@@ -85,25 +59,10 @@ class AppIconImage extends StatelessWidget {
         ),
       );
     }
-    return Image.asset(
-      path,
-      width: size,
-      height: size,
-      fit: BoxFit.contain,
-    );
+    return Image.asset(path, width: size, height: size, fit: BoxFit.contain);
   }
 }
 
-// ============================================================
-// 3) AppIconButton3D — زر أيقونة احترافي بتأثير 3D
-// ============================================================
-// مثال:
-//   AppIconButton3D(
-//     iconPath: AppIcons.profile,
-//     bgColor: Colors.blue,
-//     onTap: () => print('tap'),
-//   )
-// ============================================================
 class AppIconButton3D extends StatelessWidget {
   final String iconPath;
   final Color bgColor;
@@ -144,17 +103,6 @@ class AppIconButton3D extends StatelessWidget {
   }
 }
 
-// ============================================================
-// 4) AppStatCard3D — بطاقة إحصائية احترافية
-// ============================================================
-// مثال:
-//   AppStatCard3D(
-//     value: '12',
-//     label: 'المقررات',
-//     iconPath: AppIcons.book,
-//     color: Colors.blue,
-//   )
-// ============================================================
 class AppStatCard3D extends StatelessWidget {
   final String value;
   final String label;
@@ -181,10 +129,7 @@ class AppStatCard3D extends StatelessWidget {
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [
-            color.withOpacity(0.14),
-            color.withOpacity(0.05),
-          ],
+          colors: [color.withOpacity(0.14), color.withOpacity(0.05)],
         ),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: color.withOpacity(0.25), width: 1.2),
@@ -233,16 +178,6 @@ class AppStatCard3D extends StatelessWidget {
   }
 }
 
-// ============================================================
-// 5) AppMiniBadge3D — شارة صغيرة بأيقونة
-// ============================================================
-// مثال:
-//   AppMiniBadge3D(
-//     label: '5 محاضرات',
-//     iconPath: AppIcons.pdf,
-//     color: Colors.blue,
-//   )
-// ============================================================
 class AppMiniBadge3D extends StatelessWidget {
   final String label;
   final String iconPath;
@@ -287,17 +222,6 @@ class AppMiniBadge3D extends StatelessWidget {
   }
 }
 
-// ============================================================
-// 6) AppSectionHeader — عنوان قسم بأيقونة
-// ============================================================
-// مثال:
-//   AppSectionHeader(
-//     iconPath: AppIcons.book,
-//     title: 'مقرراتي',
-//     color: Colors.blue,
-//     trailing: TextButton(...),
-//   )
-// ============================================================
 class AppSectionHeader extends StatelessWidget {
   final String iconPath;
   final String title;
@@ -339,15 +263,6 @@ class AppSectionHeader extends StatelessWidget {
   }
 }
 
-// ============================================================
-// 7) AppLogoutDialog — حوار تأكيد الخروج
-// ============================================================
-// مثال:
-//   AppLogoutDialog.show(
-//     context,
-//     onConfirm: () => Navigator.pushAndRemoveUntil(...),
-//   )
-// ============================================================
 class AppLogoutDialog {
   AppLogoutDialog._();
 
@@ -361,59 +276,46 @@ class AppLogoutDialog {
   }) {
     showDialog(
       context: context,
-      builder: (_) => AlertDialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-        ),
-        title: Row(
-          children: [
-            AppIconImage(AppIcons.logout, size: 28),
-            const SizedBox(width: 8),
-            Text(
-              title,
-              style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
+      builder:
+          (_) => AlertDialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
             ),
-          ],
-        ),
-        content: Text(
-          message,
-          style: GoogleFonts.poppins(fontSize: 14),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(cancelText),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-              onConfirm();
-            },
-            child: Text(
-              confirmText,
-              style: const TextStyle(
-                color: Colors.red,
-                fontWeight: FontWeight.bold,
+            title: Row(
+              children: [
+                AppIconImage(AppIcons.logout, size: 28),
+                const SizedBox(width: 8),
+                Text(
+                  title,
+                  style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
+                ),
+              ],
+            ),
+            content: Text(message, style: GoogleFonts.poppins(fontSize: 14)),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: Text(cancelText),
               ),
-            ),
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                  onConfirm();
+                },
+                child: Text(
+                  confirmText,
+                  style: const TextStyle(
+                    color: Colors.red,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ],
           ),
-        ],
-      ),
     );
   }
 }
 
-// ============================================================
-// 8) AppActionCard3D — بطاقة إجراء (Quick Action)
-// ============================================================
-// مثال:
-//   AppActionCard3D(
-//     label: 'مقرراتي',
-//     iconPath: AppIcons.book,
-//     color: Colors.blue,
-//     onTap: () { },
-//   )
-// ============================================================
 class AppActionCard3D extends StatelessWidget {
   final String label;
   final String iconPath;

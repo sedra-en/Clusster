@@ -7,7 +7,7 @@ require_once '../helpers/response.php';
 
 $db = (new Database())->getConnection();
 
-// إذا تم تمرير course_id، نستثني الطلاب المسجلين فيه أصلاً
+
 $excludeCourseId = $_GET['exclude_course_id'] ?? null;
 
 try {

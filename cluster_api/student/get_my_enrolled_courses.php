@@ -5,7 +5,6 @@ require_once '../helpers/response.php';
 
 $db = (new Database())->getConnection();
 
-// نقبل user_id (من login) أو student_id مباشرة
 $userId = $_GET['user_id'] ?? null;
 $studentId = $_GET['student_id'] ?? null;
 

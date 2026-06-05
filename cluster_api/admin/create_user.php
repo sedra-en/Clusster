@@ -14,7 +14,7 @@ if (!empty($data->full_name) && !empty($data->email) && !empty($data->role)) {
     try {
         $db->beginTransaction();
 
-        // 1. إضافة المستخدم لجدول users
+        
         $q1 = "INSERT INTO users (full_name, email, password_hash, role, status, is_activated) 
                VALUES (:name, :email, '123456', :role, 'pending', 0)";
         $stmt1 = $db->prepare($q1);
@@ -25,7 +25,7 @@ if (!empty($data->full_name) && !empty($data->email) && !empty($data->role)) {
         ]);
         $userId = $db->lastInsertId();
 
-        // 2. إضافة التفاصيل حسب الدور
+        
         if ($data->role == 'student') {
             $q2 = "INSERT INTO students (user_id, student_num, faculty) VALUES (:uid, :num, :fac)";
             $stmt2 = $db->prepare($q2);
@@ -36,7 +36,7 @@ if (!empty($data->full_name) && !empty($data->email) && !empty($data->role)) {
             $stmt2->execute(['uid' => $userId, 'num' => $data->id_num, 'dept' => $data->faculty]);
         }
 
-        // 3. إنشاء كود تفعيل
+        
         $code = substr(str_shuffle("0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ"), 0, 6);
         $q3 = "INSERT INTO activation_codes (user_id, code, expires_at) VALUES (:uid, :code, DATE_ADD(NOW(), INTERVAL 7 DAY))";
         $stmt3 = $db->prepare($q3);

@@ -299,7 +299,6 @@ class _StudentQuizScreenState extends State<StudentQuizScreen> {
           const SizedBox(height: 10),
           ..._options.map((e) => _optionTile(e.toString(), selected, correct)),
 
-          // ✅ رسالة التصحيح
           if (_showFeedback && selected != null) ...[
             const SizedBox(height: 16),
             AnimatedContainer(

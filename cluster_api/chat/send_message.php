@@ -19,7 +19,7 @@ $senderRole = getUserRole($pdo, $senderId);
 if (!$senderRole) sendError('مستخدم غير صالح', 404);
 
 if ($senderRole === 'student' && isStudentMuted($pdo, $senderId, $courseId)) {
-    sendError('🚫 لقد تم كتمك في هذه الغرفة', 403);
+    sendError(' لقد تم كتمك في هذه الغرفة', 403);
 }
 
 if ($replyTo !== null) {

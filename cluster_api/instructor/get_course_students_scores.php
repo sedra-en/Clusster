@@ -28,7 +28,7 @@ try {
     $lecturesStmt->execute([$courseId]);
     $lectures = $lecturesStmt->fetchAll(PDO::FETCH_ASSOC);
  
-    // ✅ جيب كل المحاولات مرتبة من الأقدم للأحدث
+    
     $scoresStmt = $db->prepare("
         SELECT student_id, lecture_id, score, correct_q, total_q, passed, attempted_at
         FROM quiz_attempts
@@ -38,7 +38,7 @@ try {
     $scoresStmt->execute([$courseId]);
     $scores = $scoresStmt->fetchAll(PDO::FETCH_ASSOC);
  
-    // ✅ كل محاولة تنضاف للمصفوفة مو تحل محل القديمة
+    
     $scoresMap = [];
     foreach ($scores as $s) {
         $scoresMap[$s['student_id']][$s['lecture_id']][] = $s;

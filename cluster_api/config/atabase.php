@@ -1,19 +1,15 @@
 <?php
-// =====================================================
-// config/database.php
-// ملف الاتصال بقاعدة البيانات
-// =====================================================
 
 class Database {
 
-    // ✅ بيانات الاتصال
+    
     private $host     = "localhost";    // عنوان السيرفر
     private $db_name  = "cluster_academy"; // اسم قاعدة البيانات
     private $username = "root";         // اسم المستخدم في XAMPP
     private $password = "";             // كلمة المرور (فارغة في XAMPP)
     private $conn;
 
-    // ✅ دالة الاتصال
+    
     public function connect() {
 
         $this->conn = null;

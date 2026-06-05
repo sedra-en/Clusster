@@ -8,13 +8,12 @@ class ChatApi {
   static String get _base => '${ApiService.baseUrl}/chat';
 
   static Map<String, String> get _headers => {
-        "Content-Type": "application/json",
-        "Accept": "application/json",
-      };
+    "Content-Type": "application/json",
+    "Accept": "application/json",
+  };
 
-  // ============================================================
   // 1) جلب الرسائل
-  // ============================================================
+
   static Future<List<dynamic>> getMessages({
     required int courseId,
     required int userId,
@@ -31,8 +30,9 @@ class ChatApi {
       if (beforeId != null) params['before_id'] = beforeId.toString();
       if (afterId != null) params['after_id'] = afterId.toString();
 
-      final uri = Uri.parse('$_base/get_messages.php')
-          .replace(queryParameters: params);
+      final uri = Uri.parse(
+        '$_base/get_messages.php',
+      ).replace(queryParameters: params);
       final res = await http.get(uri, headers: _headers);
       final data = json.decode(res.body);
       return data['data'] ?? [];
@@ -42,9 +42,8 @@ class ChatApi {
     }
   }
 
-  // ============================================================
   // 2) إرسال رسالة (نص)
-  // ============================================================
+
   static Future<Map<String, dynamic>> sendMessage({
     required int courseId,
     required int senderId,
@@ -70,9 +69,8 @@ class ChatApi {
     }
   }
 
-  // ============================================================
   // 3) إرسال صورة
-  // ============================================================
+
   static Future<Map<String, dynamic>> sendImage({
     required int courseId,
     required int senderId,
@@ -88,8 +86,9 @@ class ChatApi {
       req.fields['course_id'] = courseId.toString();
       req.fields['sender_id'] = senderId.toString();
       req.fields['content'] = content;
-      req.files.add(http.MultipartFile.fromBytes('file', fileBytes,
-          filename: fileName));
+      req.files.add(
+        http.MultipartFile.fromBytes('file', fileBytes, filename: fileName),
+      );
 
       final streamed = await req.send();
       final res = await http.Response.fromStream(streamed);
@@ -99,9 +98,8 @@ class ChatApi {
     }
   }
 
-  // ============================================================
   // 4) تعديل رسالة
-  // ============================================================
+
   static Future<Map<String, dynamic>> editMessage({
     required int messageId,
     required int userId,
@@ -123,9 +121,8 @@ class ChatApi {
     }
   }
 
-  // ============================================================
   // 5) حذف رسالة
-  // ============================================================
+
   static Future<Map<String, dynamic>> deleteMessage({
     required int messageId,
     required int userId,
@@ -134,10 +131,7 @@ class ChatApi {
       final res = await http.post(
         Uri.parse('$_base/delete_message.php'),
         headers: _headers,
-        body: json.encode({
-          "message_id": messageId,
-          "user_id": userId,
-        }),
+        body: json.encode({"message_id": messageId, "user_id": userId}),
       );
       return json.decode(res.body);
     } catch (e) {
@@ -145,9 +139,8 @@ class ChatApi {
     }
   }
 
-  // ============================================================
   // 6) تحديد كمقروء
-  // ============================================================
+
   static Future<void> markAsRead({
     required int courseId,
     required int userId,
@@ -156,17 +149,13 @@ class ChatApi {
       await http.post(
         Uri.parse('$_base/mark_read.php'),
         headers: _headers,
-        body: json.encode({
-          "course_id": courseId,
-          "user_id": userId,
-        }),
+        body: json.encode({"course_id": courseId, "user_id": userId}),
       );
     } catch (_) {}
   }
 
-  // ============================================================
-  // 7) عداد غير المقروء — ✅ مُصلح: يتعامل مع List و Map
-  // ============================================================
+  // 7)  مُصلح: يتعامل مع List و Map
+
   static Future<Map<String, dynamic>> getUnreadCounts(int userId) async {
     try {
       final res = await http.get(
@@ -176,14 +165,12 @@ class ChatApi {
       final body = json.decode(res.body);
       final rawData = body['data'];
 
-      // 🔧 لو data جاء كـ List فاضية [] بدل Map {}
       if (rawData == null || rawData is List) {
         return {'per_course': {}, 'total': 0};
       }
 
       final data = Map<String, dynamic>.from(rawData);
 
-      // 🔧 لو per_course جاء كـ List فاضية
       final rawPerCourse = data['per_course'];
       if (rawPerCourse is List) {
         data['per_course'] = {};
@@ -191,14 +178,13 @@ class ChatApi {
 
       return data;
     } catch (e) {
-      print('🔴 getUnreadCounts error: $e');
+      print(' getUnreadCounts error: $e');
       return {'per_course': {}, 'total': 0};
     }
   }
 
-  // ============================================================
   // 8) كتم طالب
-  // ============================================================
+
   static Future<Map<String, dynamic>> muteStudent({
     required int courseId,
     required int instructorUserId,
@@ -222,9 +208,8 @@ class ChatApi {
     }
   }
 
-  // ============================================================
   // 9) فك الكتم
-  // ============================================================
+
   static Future<Map<String, dynamic>> unmuteStudent({
     required int courseId,
     required int instructorUserId,
@@ -246,9 +231,8 @@ class ChatApi {
     }
   }
 
-  // ============================================================
   // 10) قائمة المكتومين
-  // ============================================================
+
   static Future<List<dynamic>> getMutedList({
     required int courseId,
     required int instructorUserId,
@@ -267,9 +251,8 @@ class ChatApi {
     }
   }
 
-  // ============================================================
   // 11) URL الـ SSE Stream
-  // ============================================================
+
   static String streamUrl({
     required int courseId,
     required int userId,
@@ -280,9 +263,8 @@ class ChatApi {
     return url;
   }
 
-  // ============================================================
   // 12) URL لتحميل صورة
-  // ============================================================
+
   static String imageUrl(String filePath) {
     return '${ApiService.baseUrl}/uploads/chat/$filePath';
   }

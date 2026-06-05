@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:cluster_app/shared/shared_ui.dart';
 import 'package:cluster_app/models/app_user.dart';
-import 'package:cluster_app/core/api/api_service.dart'; // ✅ تم تغيير الاستيراد للـ API
+import 'package:cluster_app/core/api/api_service.dart';
 
 class AdminCreateUserScreen extends StatefulWidget {
   final UserRole defaultRole;
@@ -17,7 +17,7 @@ class _AdminCreateUserScreenState extends State<AdminCreateUserScreen> {
   final _emailController = TextEditingController();
   final _idController = TextEditingController();
   final _facultyController = TextEditingController();
-  
+
   late UserRole _selectedRole;
   bool _isLoading = false;
 
@@ -36,7 +36,6 @@ class _AdminCreateUserScreenState extends State<AdminCreateUserScreen> {
     super.dispose();
   }
 
-  // ✅ الدالة المعدلة: ترسل البيانات الآن لـ MySQL عبر الـ API
   Future<void> _handleCreateUser() async {
     if (_nameController.text.isEmpty || _emailController.text.isEmpty) {
       _showSnack("يرجى ملء البيانات الأساسية");
@@ -147,16 +146,24 @@ class _AdminCreateUserScreenState extends State<AdminCreateUserScreen> {
         children: [
           _buildField("الاسم الكامل", Icons.person_outline, _nameController),
           const SizedBox(height: 15),
-          _buildField("البريد الإلكتروني", Icons.email_outlined, _emailController),
+          _buildField(
+            "البريد الإلكتروني",
+            Icons.email_outlined,
+            _emailController,
+          ),
           const SizedBox(height: 15),
           _buildField(
-            _selectedRole == UserRole.student ? "الرقم الجامعي" : "الرقم الوظيفي",
+            _selectedRole == UserRole.student
+                ? "الرقم الجامعي"
+                : "الرقم الوظيفي",
             Icons.badge_outlined,
             _idController,
           ),
           const SizedBox(height: 15),
           _buildField(
-            _selectedRole == UserRole.student ? "الكلية / التخصص" : "القسم العلمي",
+            _selectedRole == UserRole.student
+                ? "الكلية / التخصص"
+                : "القسم العلمي",
             Icons.account_balance_outlined,
             _facultyController,
           ),
@@ -165,7 +172,11 @@ class _AdminCreateUserScreenState extends State<AdminCreateUserScreen> {
     );
   }
 
-  Widget _buildField(String hint, IconData icon, TextEditingController controller) {
+  Widget _buildField(
+    String hint,
+    IconData icon,
+    TextEditingController controller,
+  ) {
     return Container(
       decoration: BoxDecoration(
         color: Colors.black.withOpacity(0.05),
@@ -191,13 +202,22 @@ class _AdminCreateUserScreenState extends State<AdminCreateUserScreen> {
         width: double.infinity,
         height: 55,
         decoration: BoxDecoration(
-          gradient: const LinearGradient(colors: [AppColors.primary, AppColors.darkBlue]),
+          gradient: const LinearGradient(
+            colors: [AppColors.primary, AppColors.darkBlue],
+          ),
           borderRadius: BorderRadius.circular(15),
         ),
         child: Center(
-          child: _isLoading
-              ? const CircularProgressIndicator(color: Colors.white)
-              : const Text("حفظ المستخدم في القاعدة", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+          child:
+              _isLoading
+                  ? const CircularProgressIndicator(color: Colors.white)
+                  : const Text(
+                    "حفظ المستخدم في القاعدة",
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
         ),
       ),
     );
@@ -207,28 +227,37 @@ class _AdminCreateUserScreenState extends State<AdminCreateUserScreen> {
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (ctx) => AlertDialog(
-        title: const Text("تم الحفظ في MySQL"),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Icon(Icons.check_circle, color: Colors.green, size: 50),
-            const SizedBox(height: 10),
-            Text("تم إضافة المستخدم بنجاح. كود التفعيل هو:"),
-            const SizedBox(height: 10),
-            Text(code, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: AppColors.primary, letterSpacing: 2)),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.pop(ctx);
-              Navigator.pop(context);
-            },
-            child: const Text("إغلاق"),
-          )
-        ],
-      ),
+      builder:
+          (ctx) => AlertDialog(
+            title: const Text("تم الحفظ في MySQL"),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.check_circle, color: Colors.green, size: 50),
+                const SizedBox(height: 10),
+                Text("تم إضافة المستخدم بنجاح. كود التفعيل هو:"),
+                const SizedBox(height: 10),
+                Text(
+                  code,
+                  style: const TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.primary,
+                    letterSpacing: 2,
+                  ),
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(ctx);
+                  Navigator.pop(context);
+                },
+                child: const Text("إغلاق"),
+              ),
+            ],
+          ),
     );
   }
 

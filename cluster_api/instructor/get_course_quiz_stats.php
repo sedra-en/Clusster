@@ -9,13 +9,13 @@ $courseId = $_GET['course_id'] ?? null;
 if (!$courseId) sendError("course_id مطلوب");
 
 try {
-    // 1) معلومات المقرر
+    
     $courseStmt = $db->prepare("SELECT id, title FROM courses WHERE id = ? LIMIT 1");
     $courseStmt->execute([$courseId]);
     $course = $courseStmt->fetch(PDO::FETCH_ASSOC);
     if (!$course) sendError("المقرر غير موجود", 404);
 
-    // 2) عدد الطلاب المسجلين في المقرر
+    
     $enrolledStmt = $db->prepare("
         SELECT COUNT(*) AS total
         FROM enrollments
@@ -24,8 +24,7 @@ try {
     $enrolledStmt->execute([$courseId]);
     $totalEnrolled = (int)$enrolledStmt->fetchColumn();
 
-    // 3) لكل محاضرة → عدد الطلاب الفريدين الذين حلّوا الكويز
-    // نستخدم COUNT(DISTINCT student_id) عشان نتجنب العدّ مرتين إذا حلّ الطالب أكثر من محاولة
+
     $statsStmt = $db->prepare("
         SELECT
             l.id    AS lecture_id,
@@ -41,14 +40,14 @@ try {
     $statsStmt->execute([$courseId]);
     $lectures = $statsStmt->fetchAll(PDO::FETCH_ASSOC);
 
-    // 4) تحويل الأرقام لـ int
+    
     foreach ($lectures as &$lec) {
         $lec['lecture_id']         = (int)$lec['lecture_id'];
         $lec['students_attempted'] = (int)$lec['students_attempted'];
     }
     unset($lec);
 
-    // 5) إجمالي الطلاب الفريدين الذين شاركوا في أي كويز في هذا المقرر
+    
     $uniqueStmt = $db->prepare("
         SELECT COUNT(DISTINCT qa.student_id) AS total
         FROM quiz_attempts qa
@@ -58,7 +57,7 @@ try {
     $uniqueStmt->execute([$courseId]);
     $uniqueParticipants = (int)$uniqueStmt->fetchColumn();
 
-    // 6) إرسال الاستجابة
+    
     sendSuccess("Quiz stats fetched", [
         'course_id'           => (int)$course['id'],
         'course_title'        => $course['title'],

@@ -20,7 +20,7 @@ $setActive = !empty($data->is_active) ? 1 : 0;
 try {
     $db->beginTransaction();
 
-    // إذا كان الفصل الجديد active نلغي تفعيل البقية أولاً
+    
     if ($setActive) {
         $db->exec("UPDATE semesters SET is_active = 0");
     }

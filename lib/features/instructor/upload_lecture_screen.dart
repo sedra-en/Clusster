@@ -24,18 +24,10 @@ class UploadLectureScreen extends StatefulWidget {
 
 class _UploadLectureScreenState extends State<UploadLectureScreen> {
   final _titleController = TextEditingController();
-
-  // ✅ قوائم لدعم ملفات متعددة
   List<PlatformFile> _pickedFiles = [];
   List<PlatformFile> _pickedAudios = [];
+  bool _isProcessing = false;
 
-  bool _isUploading = false;
-  bool _isGenerating = false;
-
-  String? _savedLectureId;
-  String? _savedLectureTitle;
-
-  // ✅ اختيار PDF أو صورة (متعدد)
   Future<void> _pickFile() async {
     final result = await FilePicker.pickFiles(
       type: FileType.custom,
@@ -48,16 +40,42 @@ class _UploadLectureScreenState extends State<UploadLectureScreen> {
     }
   }
 
-  // ✅ اختيار صوت متعدد
   Future<void> _pickAudio() async {
     final result = await FilePicker.pickFiles(
-      type: FileType.custom,
-      allowedExtensions: ['mp3', 'ogg', 'wav', 'm4a', 'aac'],
+      type: FileType.any,
       allowMultiple: true,
       withData: true,
     );
     if (result != null && result.files.isNotEmpty) {
-      setState(() => _pickedAudios = result.files);
+      final audioExts = [
+        'mp3',
+        'ogg',
+        'wav',
+        'm4a',
+        'aac',
+        'mp4',
+        'opus',
+        'flac',
+        'wma',
+        'amr',
+        'aiff',
+        '3gp',
+        '3gpp',
+        'webm',
+        'mkv',
+      ];
+      final filtered =
+          result.files.where((f) {
+            if (f.name.isEmpty) return false;
+            final ext = f.name.split('.').last.toLowerCase();
+            return audioExts.contains(ext);
+          }).toList();
+
+      if (filtered.isNotEmpty) {
+        setState(() => _pickedAudios = filtered);
+      } else {
+        setState(() => _pickedAudios = result.files);
+      }
     }
   }
 
@@ -73,9 +91,9 @@ class _UploadLectureScreenState extends State<UploadLectureScreen> {
     return true;
   }
 
-  Future<void> _handleSave() async {
+  Future<void> _handleGenerateAI() async {
     if (!_validate()) return;
-    setState(() => _isUploading = true);
+    setState(() => _isProcessing = true);
 
     final upRes = await ApiService.uploadLecture(
       courseId: widget.courseId,
@@ -89,33 +107,28 @@ class _UploadLectureScreenState extends State<UploadLectureScreen> {
     );
 
     if (!mounted) return;
-    setState(() => _isUploading = false);
 
-    if (upRes['status'] == 'success') {
-      setState(() {
-        _savedLectureId = upRes['data']['lecture_id'].toString();
-        _savedLectureTitle = _titleController.text.trim();
-      });
-      _snack('lecture_saved_successfully'.tr());
-    } else {
+    if (upRes['status'] != 'success') {
+      setState(() => _isProcessing = false);
       _snack(upRes['message'] ?? 'upload_failed'.tr());
+      return;
     }
-  }
 
-  Future<void> _handleGenerateAI() async {
-    if (_savedLectureId == null) return;
-    setState(() => _isGenerating = true);
-    final aiRes = await ApiService.generateAIContent(_savedLectureId!);
+    final lectureId = upRes['data']['lecture_id'].toString();
+    final lectureTitle = _titleController.text.trim();
+
+    final aiRes = await ApiService.generateAIContent(lectureId);
     if (!mounted) return;
-    setState(() => _isGenerating = false);
+    setState(() => _isProcessing = false);
+
     if (aiRes['status'] == 'success') {
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
           builder:
               (_) => InstructorLectureAIViewScreen(
-                lectureId: _savedLectureId!,
-                lectureTitle: _savedLectureTitle ?? '',
+                lectureId: lectureId,
+                lectureTitle: lectureTitle,
                 color: widget.color,
               ),
         ),
@@ -127,9 +140,6 @@ class _UploadLectureScreenState extends State<UploadLectureScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final isSaved = _savedLectureId != null;
-    final isProcessing = _isUploading || _isGenerating;
-
     return Scaffold(
       body: AppBackground(
         child: Column(
@@ -139,24 +149,52 @@ class _UploadLectureScreenState extends State<UploadLectureScreen> {
               child: ListView(
                 padding: const EdgeInsets.all(20),
                 children: [
-                  if (!isSaved) ...[
-                    _buildFieldCard(),
-                    const SizedBox(height: 18),
-                    _buildUploadSection(),
-                    const SizedBox(height: 22),
-                  ],
-                  if (isProcessing) ...[
-                    _buildProgressCard(),
-                    const SizedBox(height: 16),
-                  ],
-                  if (!isSaved && !isProcessing) _buildSaveBtn(),
-                  if (isSaved && !isProcessing) ...[
-                    _buildSuccessCard(),
-                    const SizedBox(height: 16),
+                  _buildFieldCard(),
+                  const SizedBox(height: 18),
+                  _buildSectionLabel('PDF / Image', [
+                    const Icon(
+                      Icons.picture_as_pdf,
+                      color: Colors.red,
+                      size: 18,
+                    ),
+                    const SizedBox(width: 4),
+                    const Icon(
+                      Icons.image_rounded,
+                      color: Colors.blue,
+                      size: 18,
+                    ),
+                  ]),
+                  _uploadBox(
+                    label:
+                        _pickedFiles.isEmpty
+                            ? 'لم يتم اختيار ملفات بعد'
+                            : _pickedFiles.length == 1
+                            ? _pickedFiles.first.name
+                            : '${_pickedFiles.length} ملفات مختارة',
+                    onTap: _pickFile,
+                    actionLabel: '+ إضافة',
+                    isEmpty: _pickedFiles.isEmpty,
+                  ),
+                  const SizedBox(height: 16),
+                  _buildSectionLabel('الملفات الصوتية', [
+                    Icon(Icons.mic_rounded, color: widget.color, size: 18),
+                  ]),
+                  _uploadBox(
+                    label:
+                        _pickedAudios.isEmpty
+                            ? 'لم يتم اختيار صوتيات بعد'
+                            : _pickedAudios.length == 1
+                            ? _pickedAudios.first.name
+                            : '${_pickedAudios.length} ملفات صوتية',
+                    onTap: _pickAudio,
+                    actionLabel: '+ إضافة',
+                    isEmpty: _pickedAudios.isEmpty,
+                  ),
+                  const SizedBox(height: 28),
+                  if (_isProcessing)
+                    _buildProgressCard()
+                  else
                     _buildGenerateBtn(),
-                    const SizedBox(height: 12),
-                    _buildBackBtn(),
-                  ],
                 ],
               ),
             ),
@@ -191,7 +229,7 @@ class _UploadLectureScreenState extends State<UploadLectureScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'upload_lecture'.tr(),
+                  'Upload New Lecture',
                   style: GoogleFonts.poppins(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
@@ -221,7 +259,7 @@ class _UploadLectureScreenState extends State<UploadLectureScreen> {
         controller: _titleController,
         decoration: InputDecoration(
           prefixIcon: Icon(Icons.title, color: widget.color),
-          hintText: 'lecture_title'.tr(),
+          hintText: 'Lecture Title',
           border: InputBorder.none,
           contentPadding: const EdgeInsets.all(16),
         ),
@@ -229,119 +267,73 @@ class _UploadLectureScreenState extends State<UploadLectureScreen> {
     );
   }
 
-  Widget _buildUploadSection() {
-    return Column(
-      children: [
-        // ✅ PDF + صورة مع بعض
-        _uploadTile(
-          icons: [
-            Icon(Icons.picture_as_pdf, color: Colors.red, size: 22),
-            const SizedBox(width: 6),
-            Icon(Icons.image_rounded, color: Colors.blue, size: 22),
-          ],
-          label:
-              _pickedFiles.isNotEmpty
-                  ? _pickedFiles.length == 1
-                      ? _pickedFiles.first.name
-                      : '${_pickedFiles.length} ملفات مختارة'
-                  : 'PDF / Image',
-          onTap: _pickFile,
-          actionLabel: _pickedFiles.isNotEmpty ? 'change'.tr() : '+ إضافة',
-        ),
-        const SizedBox(height: 10),
-        // ✅ الملفات الصوتية
-        _uploadTile(
-          icons: [Icon(Icons.mic_rounded, color: widget.color, size: 22)],
-          label:
-              _pickedAudios.isNotEmpty
-                  ? _pickedAudios.length == 1
-                      ? _pickedAudios.first.name
-                      : '${_pickedAudios.length} ملفات صوتية'
-                  : 'الملفات الصوتية',
-          onTap: _pickAudio,
-          actionLabel: _pickedAudios.isNotEmpty ? 'change'.tr() : '+ إضافة',
-        ),
-        // ✅ عرض قائمة الملفات المختارة
-        if (_pickedFiles.isNotEmpty) ...[
-          const SizedBox(height: 8),
-          _filesList(_pickedFiles, Colors.red),
+  Widget _buildSectionLabel(String title, List<Widget> icons) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Row(
+        children: [
+          ...icons,
+          const SizedBox(width: 8),
+          Text(
+            title,
+            style: GoogleFonts.poppins(
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
         ],
-        if (_pickedAudios.isNotEmpty) ...[
-          const SizedBox(height: 8),
-          _filesList(_pickedAudios, widget.color),
-        ],
-      ],
-    );
-  }
-
-  Widget _filesList(List<PlatformFile> files, Color color) {
-    return Container(
-      padding: const EdgeInsets.all(10),
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.05),
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: color.withOpacity(0.2)),
-      ),
-      child: Column(
-        children:
-            files
-                .map(
-                  (f) => Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 3),
-                    child: Row(
-                      children: [
-                        Icon(Icons.check_circle, color: color, size: 14),
-                        const SizedBox(width: 6),
-                        Expanded(
-                          child: Text(
-                            f.name,
-                            style: TextStyle(fontSize: 11, color: color),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                )
-                .toList(),
       ),
     );
   }
 
-  Widget _uploadTile({
-    required List<Widget> icons,
+  Widget _uploadBox({
     required String label,
     required VoidCallback onTap,
     required String actionLabel,
+    required bool isEmpty,
   }) {
     return Container(
       decoration: BoxDecoration(
         color: getCardColor(context),
-        borderRadius: BorderRadius.circular(15),
-        border: Border.all(color: widget.color.withOpacity(0.2)),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: widget.color.withOpacity(0.15)),
       ),
-      child: ListTile(
-        leading: Row(mainAxisSize: MainAxisSize.min, children: icons),
-        title: Text(
-          label,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
-        ),
-        trailing: ElevatedButton(
-          onPressed: onTap,
-          style: ElevatedButton.styleFrom(
-            backgroundColor: widget.color,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(10),
+      child: Row(
+        children: [
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+              child: Text(
+                label,
+                style: TextStyle(
+                  fontSize: 13,
+                  color: isEmpty ? Colors.grey : getTextColor(context),
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
             ),
           ),
-          child: Text(
-            actionLabel,
-            style: const TextStyle(color: Colors.white, fontSize: 12),
+          GestureDetector(
+            onTap: onTap,
+            child: Container(
+              margin: const EdgeInsets.all(8),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+              decoration: BoxDecoration(
+                color: widget.color,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Text(
+                actionLabel,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
           ),
-        ),
+        ],
       ),
     );
   }
@@ -367,49 +359,12 @@ class _UploadLectureScreenState extends State<UploadLectureScreen> {
           const SizedBox(width: 14),
           Expanded(
             child: Text(
-              _isUploading
-                  ? 'uploading_file'.tr()
-                  : 'generating_ai_content'.tr(),
+              'generating_ai_content'.tr(),
               style: GoogleFonts.poppins(
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
               ),
             ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSuccessCard() {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.green.withOpacity(0.08),
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: Colors.green.withOpacity(0.4)),
-      ),
-      child: Column(
-        children: [
-          const Icon(Icons.check_circle_rounded, color: Colors.green, size: 52),
-          const SizedBox(height: 12),
-          Text(
-            'lecture_saved_successfully'.tr(),
-            style: GoogleFonts.poppins(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-              color: Colors.green,
-            ),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 6),
-          Text(
-            _savedLectureTitle ?? '',
-            style: GoogleFonts.poppins(
-              fontSize: 13,
-              color: Colors.green.withOpacity(0.8),
-            ),
-            textAlign: TextAlign.center,
           ),
         ],
       ),
@@ -445,71 +400,7 @@ class _UploadLectureScreenState extends State<UploadLectureScreen> {
             ),
             const SizedBox(width: 8),
             Text(
-              'generate_ai_content'.tr(),
-              style: GoogleFonts.poppins(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-                fontSize: 14,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildBackBtn() {
-    return ScaleButton(
-      onTap: () => Navigator.pop(context),
-      child: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.symmetric(vertical: 14),
-        decoration: BoxDecoration(
-          color: Colors.transparent,
-          borderRadius: BorderRadius.circular(15),
-          border: Border.all(color: Colors.grey.withOpacity(0.4)),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(Icons.arrow_back_rounded, color: Colors.grey, size: 18),
-            const SizedBox(width: 8),
-            Text(
-              'back_to_lectures'.tr(),
-              style: GoogleFonts.poppins(color: Colors.grey, fontSize: 13),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildSaveBtn() {
-    return ScaleButton(
-      onTap: _handleSave,
-      child: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.symmetric(vertical: 16),
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [widget.color, widget.color.withOpacity(0.75)],
-          ),
-          borderRadius: BorderRadius.circular(15),
-          boxShadow: [
-            BoxShadow(
-              color: widget.color.withOpacity(0.35),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(Icons.save_rounded, color: Colors.white, size: 20),
-            const SizedBox(width: 8),
-            Text(
-              'save_lecture'.tr(),
+              'Generate AI Summary & Quiz',
               style: GoogleFonts.poppins(
                 color: Colors.white,
                 fontWeight: FontWeight.bold,

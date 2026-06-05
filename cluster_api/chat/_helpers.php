@@ -1,7 +1,4 @@
 <?php
-// ============================================================
-// 💬 Chat Helpers — PDO Version
-// ============================================================
 
 header("Access-Control-Allow-Origin: *");
 header("Access-Control-Allow-Methods: GET, POST, OPTIONS");

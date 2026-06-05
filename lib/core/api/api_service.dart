@@ -2,9 +2,9 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 class ApiService {
-  ///static const String baseUrl = "https://clusster-production.up.railway.app";
+  static const String baseUrl = "https://clusster-production.up.railway.app";
 
-  static const String baseUrl = "http://192.168.1.106/cluster_api";
+  ///static const String baseUrl = "http://192.168.1.106/cluster_api";
 
   ///static const String baseUrl = 'http://localhost/cluster_api';
 
@@ -68,9 +68,8 @@ class ApiService {
     }
   }
 
-  // ============================================================
   // Admin
-  // ============================================================
+
   static Future<Map<String, dynamic>> getAdminStats() async {
     try {
       final res = await http.get(
@@ -344,9 +343,8 @@ class ApiService {
     }
   }
 
-  // ============================================================
   // Instructor
-  // ============================================================
+
   static Future<Map<String, dynamic>> getInstructorProfile(
     String userId,
   ) async {
@@ -417,7 +415,6 @@ class ApiService {
     }
   }
 
-  // للدكتور — بيبعت role=instructor حتى يشوف المحتوى حتى لو غير منشور
   static Future<Map<String, dynamic>> getLectureAIContent(
     String lectureId,
   ) async {
@@ -487,14 +484,43 @@ class ApiService {
     String lectureId,
   ) async {
     try {
+      // ابدأ التوليد
       final res = await http
           .post(
             Uri.parse('$baseUrl/instructor/generate_ai_content.php'),
             headers: _headers,
             body: json.encode({"lecture_id": lectureId}),
           )
-          .timeout(const Duration(minutes: 30));
-      return json.decode(res.body);
+          .timeout(const Duration(seconds: 30));
+
+      final initial = json.decode(res.body);
+
+      // إذا موجود مسبقاً
+      if (initial['status'] == 'success') return initial;
+
+      // polling — اسأل كل 15 ثانية لحتى ساعتين
+      for (int i = 0; i < 480; i++) {
+        await Future.delayed(const Duration(seconds: 15));
+
+        final check = await http
+            .get(
+              Uri.parse(
+                '$baseUrl/instructor/check_ai_status.php?lecture_id=$lectureId',
+              ),
+              headers: _headers,
+            )
+            .timeout(const Duration(seconds: 10));
+
+        final checkData = json.decode(check.body);
+
+        if (checkData['status'] == 'done') {
+          return {"status": "success", "message": "تم توليد المحتوى"};
+        } else if (checkData['status'] == 'error') {
+          return {"status": "error", "message": "فشل التوليد"};
+        }
+      }
+
+      return {"status": "error", "message": "انتهى الوقت"};
     } catch (e) {
       return {"status": "error", "message": "AI generation failed"};
     }
@@ -513,9 +539,8 @@ class ApiService {
     }
   }
 
-  // ============================================================
   // Student
-  // ============================================================
+
   static Future<Map<String, dynamic>> getStudentProfile(String userId) async {
     try {
       final res = await http.get(
@@ -568,7 +593,6 @@ class ApiService {
     }
   }
 
-  // للطالب — بيبعت role=student فيشوف بس المنشور
   static Future<Map<String, dynamic>> getAIContent(String lectureId) async {
     try {
       final res = await http.get(
@@ -638,8 +662,6 @@ class ApiService {
     }
   }
 
-  /// جلب إحصائيات الكويز لمقرر معيّن
-  /// يرجع: total_enrolled, unique_participants, lectures_with_quiz, lectures[]
   static Future<Map<String, dynamic>> getCourseQuizStats(
     String courseId,
   ) async {

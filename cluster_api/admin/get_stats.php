@@ -8,7 +8,7 @@ require_once '../helpers/response.php';
 $db = (new Database())->getConnection();
 
 try {
-    // ================== المستخدمون ==================
+    //  المستخدمون 
     $userStats = $db->query("
         SELECT
           SUM(role = 'student')                  AS students,
@@ -19,7 +19,7 @@ try {
         FROM users
     ")->fetch(PDO::FETCH_ASSOC);
 
-    // ================== المقررات ==================
+    // المقررات 
     $courseStats = $db->query("
         SELECT
           COUNT(*) AS total,
@@ -29,20 +29,20 @@ try {
         FROM courses
     ")->fetch(PDO::FETCH_ASSOC);
 
-    // ================== المحاضرات والمحتوى الذكي ==================
+    // المحاضرات والمحتوى الذكي 
     $lecturesCount = (int)$db->query("SELECT COUNT(*) FROM lectures")->fetchColumn();
     $aiContentCount = (int)$db->query("
         SELECT COUNT(*) FROM lecture_ai_content WHERE is_generated = 1
     ")->fetchColumn();
 
-    // ================== التسجيلات والكويزات ==================
+    //  التسجيلات والكويزات 
     $enrollmentsCount = (int)$db->query("
         SELECT COUNT(*) FROM enrollments WHERE is_active = 1
     ")->fetchColumn();
     $quizAttempts = (int)$db->query("SELECT COUNT(*) FROM quiz_attempts")->fetchColumn();
 
-    // ================== الفصول ==================
-    // (table قد لا يكون موجود قبل تشغيل migration — نتعامل بحذر)
+    //  الفصول 
+    
     $semesterCount = 0;
     $activeSemester = null;
     try {
@@ -51,10 +51,10 @@ try {
             SELECT id, name, code FROM semesters WHERE is_active = 1 LIMIT 1
         ")->fetch(PDO::FETCH_ASSOC) ?: null;
     } catch (Exception $e) {
-        // جدول semesters لسه ما اتعمل — نتجاهل
+        
     }
 
-    // ================== أحدث 5 مستخدمين ==================
+    //  أحدث 5 مستخدمين 
     $recentUsers = $db->query("
         SELECT id, full_name, email, role, status, is_activated, created_at
         FROM users

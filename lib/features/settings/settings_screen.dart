@@ -25,8 +25,7 @@ class SettingsScreen extends StatelessWidget {
                 children: [
                   FadeInSlide(
                     delay: 0.1,
-                    child: _buildSectionTitle(
-                        context, 'appearance'.tr()),
+                    child: _buildSectionTitle(context, 'appearance'.tr()),
                   ),
                   const SizedBox(height: 15),
 
@@ -35,9 +34,8 @@ class SettingsScreen extends StatelessWidget {
                     child: _buildSettingCard(
                       context,
                       title: 'dark_mode'.tr(),
-                      subtitle: app.isDarkMode
-                          ? 'enabled'.tr()
-                          : 'disabled'.tr(),
+                      subtitle:
+                          app.isDarkMode ? 'enabled'.tr() : 'disabled'.tr(),
                       color: AppColors.purple,
                       trailing: Switch(
                         value: app.isDarkMode,
@@ -60,7 +58,8 @@ class SettingsScreen extends StatelessWidget {
                         value: isAr,
                         onChanged: (_) {
                           context.setLocale(
-                              isAr ? const Locale('en') : const Locale('ar'));
+                            isAr ? const Locale('en') : const Locale('ar'),
+                          );
                         },
                         activeColor: AppColors.primary,
                       ),
@@ -77,7 +76,6 @@ class SettingsScreen extends StatelessWidget {
     );
   }
 
-  // ✅ Header
   Widget _buildHeader(BuildContext context) {
     return FadeInSlide(
       child: Padding(
@@ -91,40 +89,48 @@ class SettingsScreen extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: getCardColor(context),
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                      color: AppColors.primary.withOpacity(0.2)),
+                  border: Border.all(color: AppColors.primary.withOpacity(0.2)),
                 ),
-                child: Icon(Icons.arrow_back_ios_new_rounded,
-                    color: getTextColor(context), size: 20),
+                child: Icon(
+                  Icons.arrow_back_ios_new_rounded,
+                  color: getTextColor(context),
+                  size: 20,
+                ),
               ),
             ),
             const SizedBox(width: 15),
-            Text('settings'.tr(),
-                style: GoogleFonts.poppins(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                    color: getTextColor(context))),
+            Text(
+              'settings'.tr(),
+              style: GoogleFonts.poppins(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+                color: getTextColor(context),
+              ),
+            ),
           ],
         ),
       ),
     );
   }
 
-  // ✅ Section Title
   Widget _buildSectionTitle(BuildContext context, String title) {
-    return Text(title,
-        style: GoogleFonts.poppins(
-            fontSize: 16,
-            fontWeight: FontWeight.bold,
-            color: getTextColor(context)));
+    return Text(
+      title,
+      style: GoogleFonts.poppins(
+        fontSize: 16,
+        fontWeight: FontWeight.bold,
+        color: getTextColor(context),
+      ),
+    );
   }
 
-  // ✅ Setting Card مع حركة ضغط
-  Widget _buildSettingCard(BuildContext context,
-      {required String title,
-      required String subtitle,
-      required Color color,
-      Widget? trailing}) {
+  Widget _buildSettingCard(
+    BuildContext context, {
+    required String title,
+    required String subtitle,
+    required Color color,
+    Widget? trailing,
+  }) {
     return _PressableCard(
       child: Container(
         padding: const EdgeInsets.all(16),
@@ -148,25 +154,28 @@ class SettingsScreen extends StatelessWidget {
                 color: color.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(14),
               ),
-              child: Icon(Icons.tune_rounded,
-                  color: color, size: 22),
+              child: Icon(Icons.tune_rounded, color: color, size: 22),
             ),
             const SizedBox(width: 15),
             Expanded(
               child: Column(
-                crossAxisAlignment:
-                    CrossAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(title,
-                      style: GoogleFonts.poppins(
-                          fontWeight: FontWeight.w600,
-                          fontSize: 15,
-                          color: getTextColor(context))),
-                  Text(subtitle,
-                      style: GoogleFonts.poppins(
-                          fontSize: 12,
-                          color: getSecondaryTextColor(
-                              context))),
+                  Text(
+                    title,
+                    style: GoogleFonts.poppins(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 15,
+                      color: getTextColor(context),
+                    ),
+                  ),
+                  Text(
+                    subtitle,
+                    style: GoogleFonts.poppins(
+                      fontSize: 12,
+                      color: getSecondaryTextColor(context),
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -178,14 +187,12 @@ class SettingsScreen extends StatelessWidget {
   }
 }
 
-// ✅ Widget يعطي حركة ضغط واضحة
 class _PressableCard extends StatefulWidget {
   final Widget child;
   const _PressableCard({required this.child});
 
   @override
-  State<_PressableCard> createState() =>
-      _PressableCardState();
+  State<_PressableCard> createState() => _PressableCardState();
 }
 
 class _PressableCardState extends State<_PressableCard> {

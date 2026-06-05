@@ -1,8 +1,3 @@
-// ============================================================
-// lib/features/student/student_course_lectures_screen.dart
-// تبويبان: المحاضرات (PDF فقط) + الملخصات
-// ============================================================
-
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -140,7 +135,7 @@ class _StudentCourseLecturesScreenState
           child: Column(
             children: [
               _buildHeader(),
-              // ─── Tab Bar ───────────────────────────
+
               Container(
                 margin: const EdgeInsets.fromLTRB(20, 14, 20, 8),
                 padding: const EdgeInsets.all(4),
@@ -193,7 +188,6 @@ class _StudentCourseLecturesScreenState
     );
   }
 
-  // ─── تبويب المحاضرات (PDF فقط) ──────────────────────────
   Widget _lecturesTab() {
     final pdfLectures =
         _lectures.where((l) {
@@ -303,7 +297,6 @@ class _StudentCourseLecturesScreenState
     );
   }
 
-  // ─── تبويب الملخصات ──────────────────────────────────────
   Widget _summariesTab() {
     final aiLectures =
         _lectures.where((l) {
@@ -440,7 +433,6 @@ class _StudentCourseLecturesScreenState
     );
   }
 
-  // ─── Helpers ─────────────────────────────────────────────
   Widget _emptyState(String text, String icon) {
     return ListView(
       children: [

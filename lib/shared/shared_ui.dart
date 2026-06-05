@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:cluster_app/core/app_provider.dart';
 
-// --- 🎨 Color Palette ---
 class AppColors {
   static const Color primary = Color(0xFF00BCD4);
   static const Color textDark = Color(0xFF00334E);
@@ -61,13 +60,15 @@ class AppBackground extends StatelessWidget {
     return Stack(
       children: [
         Positioned.fill(
-          child: isDark
-              ? Container(color: AppColors.darkBg)
-              : Image.asset(
-                  AppAssets.bgImage,
-                  fit: BoxFit.cover,
-                  errorBuilder: (_, __, ___) => Container(color: Colors.white),
-                ),
+          child:
+              isDark
+                  ? Container(color: AppColors.darkBg)
+                  : Image.asset(
+                    AppAssets.bgImage,
+                    fit: BoxFit.cover,
+                    errorBuilder:
+                        (_, __, ___) => Container(color: Colors.white),
+                  ),
         ),
         if (!isDark)
           Positioned.fill(
@@ -121,9 +122,10 @@ class ProGlassCard extends StatelessWidget {
             height: height,
             padding: padding,
             decoration: BoxDecoration(
-              color: isDark
-                  ? AppColors.darkCard.withOpacity(0.85)
-                  : AppColors.glassWhite,
+              color:
+                  isDark
+                      ? AppColors.darkCard.withOpacity(0.85)
+                      : AppColors.glassWhite,
               borderRadius: BorderRadius.circular(24),
               border: Border.all(
                 color: isDark ? Colors.white12 : Colors.white,
@@ -145,7 +147,6 @@ class ProGlassCard extends StatelessWidget {
   }
 }
 
-// --- ✅ Scale Button (مهم) ---
 class ScaleButton extends StatefulWidget {
   final Widget child;
   final VoidCallback onTap;
@@ -187,10 +188,8 @@ class _ScaleButtonState extends State<ScaleButton>
       child: AnimatedBuilder(
         animation: _ctrl,
         child: widget.child,
-        builder: (_, child) => Transform.scale(
-          scale: 1 - _ctrl.value,
-          child: child,
-        ),
+        builder:
+            (_, child) => Transform.scale(scale: 1 - _ctrl.value, child: child),
       ),
     );
   }

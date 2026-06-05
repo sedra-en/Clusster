@@ -43,7 +43,7 @@ try {
     $totalQ   = count($serverQuestions);
     $correctQ = 0;
  
-    // ✅ نقارن بالـ index + نص الخيار (يحل مشكلة عدم التطابق)
+    
     foreach ($answers as $idx => $a) {
         if (!is_array($a)) continue;
         $selected = trim($a['selected'] ?? '');
@@ -53,10 +53,10 @@ try {
         $correct = trim($serverQ['answer'] ?? ($serverQ['correct'] ?? ''));
         if ($correct === '') continue;
  
-        // مقارنة مباشرة بالمفتاح
+        
         $isCorrect = $correct === $selected;
  
-        // لو ما طابق — جرب تطابق بنص الخيار
+        
         if (!$isCorrect && isset($serverQ['choices'])) {
             $choices = $serverQ['choices'];
             if (is_string($choices)) {
@@ -79,7 +79,7 @@ try {
     $passed     = $percentage >= 60 ? 1 : 0;
     $score      = $percentage;
  
-    // ✅ كل محاولة تنحفظ جديدة
+    
     $insert = $db->prepare("
         INSERT INTO quiz_attempts
           (student_id, lecture_id, score, total_q, correct_q, answers_json, passed, attempted_at)

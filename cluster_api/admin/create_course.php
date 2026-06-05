@@ -15,7 +15,7 @@ if (empty($data->title)) {
     sendError("اسم المقرر مطلوب");
 }
 
-// لو ما تم تمرير semester_id نأخذ الفصل الحالي
+
 $semesterId = !empty($data->semester_id) ? (int)$data->semester_id : null;
 if ($semesterId === null) {
     $row = $db->query("SELECT id FROM semesters WHERE is_active = 1 LIMIT 1")
@@ -28,7 +28,7 @@ $coverColor = !empty($data->cover_color)  ? $data->cover_color  : '#00BCD4';
 $instructor = !empty($data->instructor_id)? (int)$data->instructor_id : null;
 $desc       = $data->description ?? null;
 
-// فحص القيم
+
 if (!in_array($status, ['draft','published','hidden'], true)) {
     sendError("status غير صالح");
 }
@@ -37,7 +37,7 @@ if (!preg_match('/^#[0-9A-Fa-f]{6}$/', $coverColor)) {
 }
 
 try {
-    // إذا تم تمرير instructor_id، نتأكد إنه موجود
+    
     if ($instructor !== null) {
         $check = $db->prepare("SELECT id FROM instructors WHERE id = ?");
         $check->execute([$instructor]);

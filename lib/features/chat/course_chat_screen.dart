@@ -49,7 +49,6 @@ class _CourseChatScreenState extends State<CourseChatScreen> {
   Timer? _pollingFallbackTimer;
   String _sseBuffer = '';
 
-  // ✅ علامة للتحقق هل الـ widget لسا حي
   bool _isDisposed = false;
 
   bool get _isInstructor => widget.userRole == 'instructor';
@@ -64,7 +63,7 @@ class _CourseChatScreenState extends State<CourseChatScreen> {
 
   @override
   void dispose() {
-    _isDisposed = true; // ✅ نضع العلامة قبل أي شي
+    _isDisposed = true;
     _sseSubscription?.cancel();
     _sseSubscription = null;
     _sseClient?.close();
@@ -76,7 +75,6 @@ class _CourseChatScreenState extends State<CourseChatScreen> {
     super.dispose();
   }
 
-  // ✅ helper آمن للـ setState
   void _safeSetState(VoidCallback fn) {
     if (!_isDisposed && mounted) {
       setState(fn);
@@ -106,11 +104,13 @@ class _CourseChatScreenState extends State<CourseChatScreen> {
     _disconnectSSE();
     try {
       _sseClient = http.Client();
-      final uri = Uri.parse(ChatApi.streamUrl(
-        courseId: widget.courseId,
-        userId: widget.userId,
-        lastId: _lastMessageId,
-      ));
+      final uri = Uri.parse(
+        ChatApi.streamUrl(
+          courseId: widget.courseId,
+          userId: widget.userId,
+          lastId: _lastMessageId,
+        ),
+      );
 
       final request = http.Request('GET', uri);
       request.headers['Accept'] = 'text/event-stream';
@@ -119,21 +119,23 @@ class _CourseChatScreenState extends State<CourseChatScreen> {
       final response = await _sseClient!.send(request);
       if (_isDisposed) return;
 
-      _sseSubscription = response.stream.transform(utf8.decoder).listen(
-        _onSSEData,
-        onError: (e) {
-          print('🔴 SSE Error: $e');
-          if (!_isDisposed) _activatePollingFallback();
-        },
-        onDone: () {
-          if (!_isDisposed && mounted) {
-            Future.delayed(const Duration(seconds: 2), () {
-              if (!_isDisposed && mounted) _connectSSE();
-            });
-          }
-        },
-        cancelOnError: false,
-      );
+      _sseSubscription = response.stream
+          .transform(utf8.decoder)
+          .listen(
+            _onSSEData,
+            onError: (e) {
+              print(' SSE Error: $e');
+              if (!_isDisposed) _activatePollingFallback();
+            },
+            onDone: () {
+              if (!_isDisposed && mounted) {
+                Future.delayed(const Duration(seconds: 2), () {
+                  if (!_isDisposed && mounted) _connectSSE();
+                });
+              }
+            },
+            cancelOnError: false,
+          );
 
       _safeSetState(() => _sseConnected = true);
       _pollingFallbackTimer?.cancel();
@@ -142,7 +144,6 @@ class _CourseChatScreenState extends State<CourseChatScreen> {
     }
   }
 
-  // ✅ بدون setState — للاستخدام داخل dispose
   void _disconnectSSE() {
     _sseSubscription?.cancel();
     _sseSubscription = null;
@@ -225,10 +226,7 @@ class _CourseChatScreenState extends State<CourseChatScreen> {
 
   Future<void> _markAsRead() async {
     if (_isDisposed) return;
-    await ChatApi.markAsRead(
-      courseId: widget.courseId,
-      userId: widget.userId,
-    );
+    await ChatApi.markAsRead(courseId: widget.courseId, userId: widget.userId);
   }
 
   void _scrollToBottom() {
@@ -263,9 +261,9 @@ class _CourseChatScreenState extends State<CourseChatScreen> {
       _handleNewMessage(result['data']);
     } else {
       final msg = result['message']?.toString() ?? 'فشل الإرسال';
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(msg), backgroundColor: Colors.red),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(msg), backgroundColor: Colors.red));
       if (msg.contains('كتم') || msg.contains('🚫')) {
         _safeSetState(() => _muted = true);
       }
@@ -305,46 +303,58 @@ class _CourseChatScreenState extends State<CourseChatScreen> {
   Future<void> _deleteMessage(dynamic msg) async {
     final confirm = await showDialog<bool>(
       context: context,
-      builder: (_) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Row(children: [
-          AppIconImage(AppIcons.delete, size: 24),
-          const SizedBox(width: 8),
-          Text('delete_message'.tr()),
-        ]),
-        content: Text('delete_message_confirm'.tr()),
-        actions: [
-          TextButton(
-              onPressed: () => Navigator.pop(context, false),
-              child: Text('cancel'.tr())),
-          TextButton(
-              onPressed: () => Navigator.pop(context, true),
-              child: Text('delete'.tr(),
-                  style: const TextStyle(color: Colors.red))),
-        ],
-      ),
+      builder:
+          (_) => AlertDialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+            title: Row(
+              children: [
+                AppIconImage(AppIcons.delete, size: 24),
+                const SizedBox(width: 8),
+                Text('delete_message'.tr()),
+              ],
+            ),
+            content: Text('delete_message_confirm'.tr()),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: Text('cancel'.tr()),
+              ),
+              TextButton(
+                onPressed: () => Navigator.pop(context, true),
+                child: Text(
+                  'delete'.tr(),
+                  style: const TextStyle(color: Colors.red),
+                ),
+              ),
+            ],
+          ),
     );
     if (confirm != true) return;
 
     final result = await ChatApi.deleteMessage(
-        messageId: msg['id'], userId: widget.userId);
+      messageId: msg['id'],
+      userId: widget.userId,
+    );
     if (_isDisposed || !mounted) return;
 
     if (result['status'] == 'success') {
       final idx = _messages.indexWhere((m) => m['id'] == msg['id']);
       if (idx >= 0) {
         _safeSetState(() {
-          _messages[idx] = Map<String, dynamic>.from(_messages[idx])
-            ..['is_deleted'] = true
-            ..['content'] = null
-            ..['file_path'] = null
-            ..['deleted_by_role'] = result['data']['deleted_by_role'];
+          _messages[idx] =
+              Map<String, dynamic>.from(_messages[idx])
+                ..['is_deleted'] = true
+                ..['content'] = null
+                ..['file_path'] = null
+                ..['deleted_by_role'] = result['data']['deleted_by_role'];
         });
       }
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(result['message'] ?? 'فشل الحذف')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(result['message'] ?? 'فشل الحذف')));
     }
   }
 
@@ -352,38 +362,54 @@ class _CourseChatScreenState extends State<CourseChatScreen> {
     final reasonCtrl = TextEditingController();
     final confirm = await showDialog<bool>(
       context: context,
-      builder: (_) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Row(children: [
-          AppIconImage(AppIcons.warning, size: 24),
-          const SizedBox(width: 8),
-          Text('mute_student'.tr()),
-        ]),
-        content: Column(mainAxisSize: MainAxisSize.min, children: [
-          Text('mute_student_confirm'
-              .tr()
-              .replaceAll('{name}', msg['sender_name'] ?? '')),
-          const SizedBox(height: 12),
-          TextField(
-            controller: reasonCtrl,
-            decoration: InputDecoration(
-              hintText: 'reason_optional'.tr(),
-              border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12)),
+      builder:
+          (_) => AlertDialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
             ),
-            maxLines: 2,
+            title: Row(
+              children: [
+                AppIconImage(AppIcons.warning, size: 24),
+                const SizedBox(width: 8),
+                Text('mute_student'.tr()),
+              ],
+            ),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  'mute_student_confirm'.tr().replaceAll(
+                    '{name}',
+                    msg['sender_name'] ?? '',
+                  ),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: reasonCtrl,
+                  decoration: InputDecoration(
+                    hintText: 'reason_optional'.tr(),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  maxLines: 2,
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: Text('cancel'.tr()),
+              ),
+              TextButton(
+                onPressed: () => Navigator.pop(context, true),
+                child: Text(
+                  'mute'.tr(),
+                  style: const TextStyle(color: Colors.red),
+                ),
+              ),
+            ],
           ),
-        ]),
-        actions: [
-          TextButton(
-              onPressed: () => Navigator.pop(context, false),
-              child: Text('cancel'.tr())),
-          TextButton(
-              onPressed: () => Navigator.pop(context, true),
-              child: Text('mute'.tr(),
-                  style: const TextStyle(color: Colors.red))),
-        ],
-      ),
     );
     if (confirm != true) return;
 
@@ -398,13 +424,14 @@ class _CourseChatScreenState extends State<CourseChatScreen> {
     if (result['status'] == 'success') {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-            content: Text('🚫 ${'student_muted'.tr()}'),
-            backgroundColor: Colors.orange),
+          content: Text(' ${'student_muted'.tr()}'),
+          backgroundColor: Colors.orange,
+        ),
       );
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(result['message'] ?? 'فشل')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(result['message'] ?? 'فشل')));
     }
   }
 
@@ -412,11 +439,12 @@ class _CourseChatScreenState extends State<CourseChatScreen> {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (_) => MutedStudentsScreen(
-          courseId: widget.courseId,
-          instructorUserId: widget.userId,
-          color: widget.color,
-        ),
+        builder:
+            (_) => MutedStudentsScreen(
+              courseId: widget.courseId,
+              instructorUserId: widget.userId,
+              color: widget.color,
+            ),
       ),
     );
   }
@@ -426,11 +454,13 @@ class _CourseChatScreenState extends State<CourseChatScreen> {
     return Scaffold(
       backgroundColor: const Color(0xFFECE5DD),
       body: SafeArea(
-        child: Column(children: [
-          _buildHeader(),
-          Expanded(child: _buildMessagesList()),
-          _buildInputBar(),
-        ]),
+        child: Column(
+          children: [
+            _buildHeader(),
+            Expanded(child: _buildMessagesList()),
+            _buildInputBar(),
+          ],
+        ),
       ),
     );
   }
@@ -440,73 +470,102 @@ class _CourseChatScreenState extends State<CourseChatScreen> {
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-            colors: [widget.color, widget.color.withOpacity(0.75)]),
+          colors: [widget.color, widget.color.withOpacity(0.75)],
+        ),
         boxShadow: [
           BoxShadow(
-              color: widget.color.withOpacity(0.25),
-              blurRadius: 8,
-              offset: const Offset(0, 3))
+            color: widget.color.withOpacity(0.25),
+            blurRadius: 8,
+            offset: const Offset(0, 3),
+          ),
         ],
       ),
-      child: Row(children: [
-        GestureDetector(
-          onTap: () => Navigator.pop(context),
-          child: Container(
-            padding: const EdgeInsets.all(7),
-            decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.2), shape: BoxShape.circle),
-            child: const Icon(Icons.arrow_back_ios_new_rounded,
-                color: Colors.white, size: 16),
-          ),
-        ),
-        const SizedBox(width: 10),
-        Container(
-          padding: const EdgeInsets.all(5),
-          decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.25),
-              borderRadius: BorderRadius.circular(10)),
-          child: Image.asset('assets/icons/icons8-message.gif',
-              width: 26, height: 26, fit: BoxFit.contain),
-        ),
-        const SizedBox(width: 10),
-        Expanded(
-          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text(widget.courseTitle,
-                style: GoogleFonts.poppins(
-                    color: Colors.white,
-                    fontSize: 15,
-                    fontWeight: FontWeight.bold),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis),
-            Row(children: [
-              Container(
-                width: 7,
-                height: 7,
-                decoration: BoxDecoration(
-                    color: _sseConnected
-                        ? Colors.greenAccent
-                        : Colors.orangeAccent,
-                    shape: BoxShape.circle),
-              ),
-              const SizedBox(width: 5),
-              Text(_sseConnected ? 'live'.tr() : 'syncing'.tr(),
-                  style:
-                      const TextStyle(color: Colors.white70, fontSize: 10)),
-            ]),
-          ]),
-        ),
-        if (_isInstructor)
+      child: Row(
+        children: [
           GestureDetector(
-            onTap: _openMutedList,
+            onTap: () => Navigator.pop(context),
             child: Container(
               padding: const EdgeInsets.all(7),
               decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.2),
-                  shape: BoxShape.circle),
-              child: AppIconImage(AppIcons.warning, size: 18),
+                color: Colors.white.withOpacity(0.2),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.arrow_back_ios_new_rounded,
+                color: Colors.white,
+                size: 16,
+              ),
             ),
           ),
-      ]),
+          const SizedBox(width: 10),
+          Container(
+            padding: const EdgeInsets.all(5),
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.25),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Image.asset(
+              'assets/icons/icons8-message.gif',
+              width: 26,
+              height: 26,
+              fit: BoxFit.contain,
+            ),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  widget.courseTitle,
+                  style: GoogleFonts.poppins(
+                    color: Colors.white,
+                    fontSize: 15,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                Row(
+                  children: [
+                    Container(
+                      width: 7,
+                      height: 7,
+                      decoration: BoxDecoration(
+                        color:
+                            _sseConnected
+                                ? Colors.greenAccent
+                                : Colors.orangeAccent,
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                    const SizedBox(width: 5),
+                    Text(
+                      _sseConnected ? 'live'.tr() : 'syncing'.tr(),
+                      style: const TextStyle(
+                        color: Colors.white70,
+                        fontSize: 10,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          if (_isInstructor)
+            GestureDetector(
+              onTap: _openMutedList,
+              child: Container(
+                padding: const EdgeInsets.all(7),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.2),
+                  shape: BoxShape.circle,
+                ),
+                child: AppIconImage(AppIcons.warning, size: 18),
+              ),
+            ),
+        ],
+      ),
     );
   }
 
@@ -514,17 +573,24 @@ class _CourseChatScreenState extends State<CourseChatScreen> {
     if (_loading) return const Center(child: CircularProgressIndicator());
     if (_messages.isEmpty) {
       return Center(
-        child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-          Image.asset('assets/icons/icons8-message.gif', width: 80, height: 80),
-          const SizedBox(height: 12),
-          Text(
-            _isInstructor
-                ? 'no_messages_yet_instructor'.tr()
-                : 'no_messages_yet_student'.tr(),
-            textAlign: TextAlign.center,
-            style: TextStyle(color: Colors.grey[600]),
-          ),
-        ]),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Image.asset(
+              'assets/icons/icons8-message.gif',
+              width: 80,
+              height: 80,
+            ),
+            const SizedBox(height: 12),
+            Text(
+              _isInstructor
+                  ? 'no_messages_yet_instructor'.tr()
+                  : 'no_messages_yet_student'.tr(),
+              textAlign: TextAlign.center,
+              style: TextStyle(color: Colors.grey[600]),
+            ),
+          ],
+        ),
       );
     }
 
@@ -534,12 +600,15 @@ class _CourseChatScreenState extends State<CourseChatScreen> {
       itemCount: _messages.length,
       itemBuilder: (_, i) {
         final msg = _messages[i];
-        final showDate = i == 0 ||
+        final showDate =
+            i == 0 ||
             !_isSameDay(_messages[i - 1]['created_at'], msg['created_at']);
-        return Column(children: [
-          if (showDate) _buildDateSeparator(msg['created_at']),
-          _buildMessageBubble(msg),
-        ]);
+        return Column(
+          children: [
+            if (showDate) _buildDateSeparator(msg['created_at']),
+            _buildMessageBubble(msg),
+          ],
+        );
       },
     );
   }
@@ -567,7 +636,8 @@ class _CourseChatScreenState extends State<CourseChatScreen> {
           margin: const EdgeInsets.symmetric(vertical: 3),
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
           constraints: BoxConstraints(
-              maxWidth: MediaQuery.of(context).size.width * 0.75),
+            maxWidth: MediaQuery.of(context).size.width * 0.75,
+          ),
           decoration: BoxDecoration(
             color: bubbleColor,
             borderRadius: BorderRadius.only(
@@ -578,49 +648,71 @@ class _CourseChatScreenState extends State<CourseChatScreen> {
             ),
             boxShadow: [
               BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
-                  blurRadius: 2,
-                  offset: const Offset(0, 1))
+                color: Colors.black.withOpacity(0.05),
+                blurRadius: 2,
+                offset: const Offset(0, 1),
+              ),
             ],
-            border: isInstructorMsg && !isMine
-                ? Border.all(color: widget.color.withOpacity(0.3))
-                : null,
+            border:
+                isInstructorMsg && !isMine
+                    ? Border.all(color: widget.color.withOpacity(0.3))
+                    : null,
           ),
-          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            if (!isMine) ...[
-              Row(mainAxisSize: MainAxisSize.min, children: [
-                if (isInstructorMsg) AppIconImage(AppIcons.teacher, size: 13),
-                if (isInstructorMsg) const SizedBox(width: 3),
-                Text(msg['sender_name'] ?? '',
-                    style: GoogleFonts.poppins(
-                      fontSize: 11,
-                      fontWeight: FontWeight.bold,
-                      color:
-                          isInstructorMsg ? widget.color : Colors.grey[700],
-                    )),
-              ]),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (!isMine) ...[
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (isInstructorMsg)
+                      AppIconImage(AppIcons.teacher, size: 13),
+                    if (isInstructorMsg) const SizedBox(width: 3),
+                    Text(
+                      msg['sender_name'] ?? '',
+                      style: GoogleFonts.poppins(
+                        fontSize: 11,
+                        fontWeight: FontWeight.bold,
+                        color:
+                            isInstructorMsg ? widget.color : Colors.grey[700],
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 3),
+              ],
+              if (isDeleted)
+                _buildDeletedContent(msg)
+              else if (type == 'image')
+                _buildImageContent(msg)
+              else
+                Text(
+                  msg['content'] ?? '',
+                  style: const TextStyle(fontSize: 14),
+                ),
               const SizedBox(height: 3),
-            ],
-            if (isDeleted)
-              _buildDeletedContent(msg)
-            else if (type == 'image')
-              _buildImageContent(msg)
-            else
-              Text(msg['content'] ?? '', style: const TextStyle(fontSize: 14)),
-            const SizedBox(height: 3),
-            Row(mainAxisSize: MainAxisSize.min, children: [
-              if (msg['is_edited'] == true && !isDeleted) ...[
-                Text('edited'.tr(),
-                    style: TextStyle(
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (msg['is_edited'] == true && !isDeleted) ...[
+                    Text(
+                      'edited'.tr(),
+                      style: TextStyle(
                         fontSize: 9,
                         color: Colors.grey[600],
-                        fontStyle: FontStyle.italic)),
-                const SizedBox(width: 4),
-              ],
-              Text(_formatTime(msg['created_at']),
-                  style: TextStyle(fontSize: 10, color: Colors.grey[600])),
-            ]),
-          ]),
+                        fontStyle: FontStyle.italic,
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                  ],
+                  Text(
+                    _formatTime(msg['created_at']),
+                    style: TextStyle(fontSize: 10, color: Colors.grey[600]),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -628,16 +720,20 @@ class _CourseChatScreenState extends State<CourseChatScreen> {
 
   Widget _buildDeletedContent(dynamic msg) {
     final by = msg['deleted_by_role'];
-    final text = by == 'instructor'
-        ? '🗑️ ${'msg_deleted_by_instructor'.tr()}'
-        : '🗑️ ${'msg_deleted'.tr()}';
+    final text =
+        by == 'instructor'
+            ? '🗑️ ${'msg_deleted_by_instructor'.tr()}'
+            : '🗑️ ${'msg_deleted'.tr()}';
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 2),
-      child: Text(text,
-          style: TextStyle(
-              fontSize: 13,
-              fontStyle: FontStyle.italic,
-              color: Colors.grey[600])),
+      child: Text(
+        text,
+        style: TextStyle(
+          fontSize: 13,
+          fontStyle: FontStyle.italic,
+          color: Colors.grey[600],
+        ),
+      ),
     );
   }
 
@@ -647,20 +743,31 @@ class _CourseChatScreenState extends State<CourseChatScreen> {
     final url = ChatApi.imageUrl(filePath);
     return ClipRRect(
       borderRadius: BorderRadius.circular(8),
-      child: Image.network(url, width: 220, fit: BoxFit.cover,
-          loadingBuilder: (_, child, progress) {
-        if (progress == null) return child;
-        return Container(
+      child: Image.network(
+        url,
+        width: 220,
+        fit: BoxFit.cover,
+        loadingBuilder: (_, child, progress) {
+          if (progress == null) return child;
+          return Container(
             width: 220,
             height: 180,
             color: Colors.grey[200],
-            child: const Center(child: CircularProgressIndicator()));
-      }, errorBuilder: (_, __, ___) => Container(
+            child: const Center(child: CircularProgressIndicator()),
+          );
+        },
+        errorBuilder:
+            (_, __, ___) => Container(
               width: 220,
               height: 180,
               color: Colors.grey[200],
-              child: const Icon(Icons.broken_image,
-                  size: 40, color: Colors.grey))),
+              child: const Icon(
+                Icons.broken_image,
+                size: 40,
+                color: Colors.grey,
+              ),
+            ),
+      ),
     );
   }
 
@@ -670,10 +777,13 @@ class _CourseChatScreenState extends State<CourseChatScreen> {
       margin: const EdgeInsets.symmetric(vertical: 12),
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
       decoration: BoxDecoration(
-          color: Colors.black.withOpacity(0.1),
-          borderRadius: BorderRadius.circular(12)),
-      child:
-          Text(label, style: const TextStyle(fontSize: 11, color: Colors.black54)),
+        color: Colors.black.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Text(
+        label,
+        style: const TextStyle(fontSize: 11, color: Colors.black54),
+      ),
     );
   }
 
@@ -682,14 +792,20 @@ class _CourseChatScreenState extends State<CourseChatScreen> {
       return Container(
         padding: const EdgeInsets.all(12),
         color: Colors.red.withOpacity(0.08),
-        child:
-            Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-          AppIconImage(AppIcons.warning, size: 20),
-          const SizedBox(width: 8),
-          Text('🚫 ${'you_are_muted'.tr()}',
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            AppIconImage(AppIcons.warning, size: 20),
+            const SizedBox(width: 8),
+            Text(
+              '🚫 ${'you_are_muted'.tr()}',
               style: const TextStyle(
-                  color: Colors.red, fontWeight: FontWeight.bold)),
-        ]),
+                color: Colors.red,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
+        ),
       );
     }
 
@@ -699,64 +815,80 @@ class _CourseChatScreenState extends State<CourseChatScreen> {
         color: Colors.white,
         boxShadow: [
           BoxShadow(
-              color: Colors.black.withOpacity(0.05),
-              blurRadius: 4,
-              offset: const Offset(0, -2))
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 4,
+            offset: const Offset(0, -2),
+          ),
         ],
       ),
-      child: Row(children: [
-        GestureDetector(
-          onTap: _sending ? null : _sendImage,
-          child: Container(
+      child: Row(
+        children: [
+          GestureDetector(
+            onTap: _sending ? null : _sendImage,
+            child: Container(
               padding: const EdgeInsets.all(8),
-              child: AppIconImage(AppIcons.upload, size: 22)),
-        ),
-        Expanded(
-          child: TextField(
-            controller: _msgCtrl,
-            maxLines: null,
-            textInputAction: TextInputAction.newline,
-            decoration: InputDecoration(
-              hintText: 'type_message'.tr(),
-              hintStyle: TextStyle(color: Colors.grey[400], fontSize: 13),
-              border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(24),
-                  borderSide: BorderSide.none),
-              filled: true,
-              fillColor: const Color(0xFFF5F5F5),
-              contentPadding:
-                  const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: AppIconImage(AppIcons.upload, size: 22),
             ),
           ),
-        ),
-        const SizedBox(width: 6),
-        GestureDetector(
-          onTap: _sending ? null : _sendText,
-          child: Container(
-            width: 42,
-            height: 42,
-            decoration: BoxDecoration(
-              color: widget.color,
-              shape: BoxShape.circle,
-              boxShadow: [
-                BoxShadow(
+          Expanded(
+            child: TextField(
+              controller: _msgCtrl,
+              maxLines: null,
+              textInputAction: TextInputAction.newline,
+              decoration: InputDecoration(
+                hintText: 'type_message'.tr(),
+                hintStyle: TextStyle(color: Colors.grey[400], fontSize: 13),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(24),
+                  borderSide: BorderSide.none,
+                ),
+                filled: true,
+                fillColor: const Color(0xFFF5F5F5),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: 6),
+          GestureDetector(
+            onTap: _sending ? null : _sendText,
+            child: Container(
+              width: 42,
+              height: 42,
+              decoration: BoxDecoration(
+                color: widget.color,
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
                     color: widget.color.withOpacity(0.3),
                     blurRadius: 6,
-                    offset: const Offset(0, 2))
-              ],
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child:
+                  _sending
+                      ? const Center(
+                        child: SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(
+                            color: Colors.white,
+                            strokeWidth: 2,
+                          ),
+                        ),
+                      )
+                      : const Icon(
+                        Icons.send_rounded,
+                        color: Colors.white,
+                        size: 20,
+                      ),
             ),
-            child: _sending
-                ? const Center(
-                    child: SizedBox(
-                        width: 18,
-                        height: 18,
-                        child: CircularProgressIndicator(
-                            color: Colors.white, strokeWidth: 2)))
-                : const Icon(Icons.send_rounded,
-                    color: Colors.white, size: 20),
           ),
-        ),
-      ]),
+        ],
+      ),
     );
   }
 
@@ -769,43 +901,50 @@ class _CourseChatScreenState extends State<CourseChatScreen> {
     showModalBottomSheet(
       context: context,
       shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
-      builder: (_) => Container(
-        padding: const EdgeInsets.symmetric(vertical: 12),
-        child: Column(mainAxisSize: MainAxisSize.min, children: [
-          Container(
-            width: 40,
-            height: 4,
-            margin: const EdgeInsets.only(bottom: 12),
-            decoration: BoxDecoration(
-                color: Colors.grey[300], borderRadius: BorderRadius.circular(2)),
-          ),
-          if (canDelete)
-            ListTile(
-              leading: AppIconImage(AppIcons.delete, size: 24),
-              title: Text('delete'.tr()),
-              onTap: () {
-                Navigator.pop(context);
-                _deleteMessage(msg);
-              },
-            ),
-          if (canMute)
-            ListTile(
-              leading: AppIconImage(AppIcons.warning, size: 24),
-              title: Text('mute_this_student'.tr()),
-              onTap: () {
-                Navigator.pop(context);
-                _muteStudent(msg);
-              },
-            ),
-          if (!canDelete && !canMute)
-            ListTile(
-              leading: const Icon(Icons.info_outline, color: Colors.grey),
-              title: Text('no_actions_available'.tr()),
-              onTap: () => Navigator.pop(context),
-            ),
-        ]),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
+      builder:
+          (_) => Container(
+            padding: const EdgeInsets.symmetric(vertical: 12),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 40,
+                  height: 4,
+                  margin: const EdgeInsets.only(bottom: 12),
+                  decoration: BoxDecoration(
+                    color: Colors.grey[300],
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+                if (canDelete)
+                  ListTile(
+                    leading: AppIconImage(AppIcons.delete, size: 24),
+                    title: Text('delete'.tr()),
+                    onTap: () {
+                      Navigator.pop(context);
+                      _deleteMessage(msg);
+                    },
+                  ),
+                if (canMute)
+                  ListTile(
+                    leading: AppIconImage(AppIcons.warning, size: 24),
+                    title: Text('mute_this_student'.tr()),
+                    onTap: () {
+                      Navigator.pop(context);
+                      _muteStudent(msg);
+                    },
+                  ),
+                if (!canDelete && !canMute)
+                  ListTile(
+                    leading: const Icon(Icons.info_outline, color: Colors.grey),
+                    title: Text('no_actions_available'.tr()),
+                    onTap: () => Navigator.pop(context),
+                  ),
+              ],
+            ),
+          ),
     );
   }
 

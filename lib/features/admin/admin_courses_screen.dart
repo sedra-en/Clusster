@@ -3,7 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:cluster_app/shared/shared_ui.dart';
 import 'package:cluster_app/core/api/api_service.dart';
-import 'package:cluster_app/core/constants/app_icons.dart'; // ⭐ جديد
+import 'package:cluster_app/core/constants/app_icons.dart';
 import 'package:cluster_app/features/admin/admin_create_course_screen.dart';
 import 'package:cluster_app/features/admin/admin_course_management_screen.dart';
 
@@ -43,7 +43,11 @@ class _AdminCoursesScreenState extends State<AdminCoursesScreen> {
   Future<void> _reloadCourses() async {
     setState(() => _loading = true);
     final c = await ApiService.getAdminCourses(semesterId: _semesterFilter);
-    if (mounted) setState(() { _courses = c; _loading = false; });
+    if (mounted)
+      setState(() {
+        _courses = c;
+        _loading = false;
+      });
   }
 
   @override
@@ -55,8 +59,10 @@ class _AdminCoursesScreenState extends State<AdminCoursesScreen> {
           children: [
             AppIconImage(AppIcons.book, size: 24),
             const SizedBox(width: 8),
-            Text('manage_courses'.tr(),
-                style: GoogleFonts.poppins(fontWeight: FontWeight.bold)),
+            Text(
+              'manage_courses'.tr(),
+              style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
+            ),
           ],
         ),
         backgroundColor: Colors.transparent,
@@ -70,18 +76,26 @@ class _AdminCoursesScreenState extends State<AdminCoursesScreen> {
             children: [
               _buildSemesterFilter(),
               Expanded(
-                child: _loading
-                    ? const Center(child: CircularProgressIndicator())
-                    : RefreshIndicator(
-                        onRefresh: _reloadCourses,
-                        child: _courses.isEmpty
-                            ? _emptyState()
-                            : ListView.builder(
-                                padding: const EdgeInsets.fromLTRB(20, 5, 20, 90),
-                                itemCount: _courses.length,
-                                itemBuilder: (_, i) => _courseCard(_courses[i]),
-                              ),
-                      ),
+                child:
+                    _loading
+                        ? const Center(child: CircularProgressIndicator())
+                        : RefreshIndicator(
+                          onRefresh: _reloadCourses,
+                          child:
+                              _courses.isEmpty
+                                  ? _emptyState()
+                                  : ListView.builder(
+                                    padding: const EdgeInsets.fromLTRB(
+                                      20,
+                                      5,
+                                      20,
+                                      90,
+                                    ),
+                                    itemCount: _courses.length,
+                                    itemBuilder:
+                                        (_, i) => _courseCard(_courses[i]),
+                                  ),
+                        ),
               ),
             ],
           ),
@@ -92,22 +106,23 @@ class _AdminCoursesScreenState extends State<AdminCoursesScreen> {
         elevation: 6,
         onPressed: () async {
           await Navigator.push(
-              context,
-              MaterialPageRoute(
-                  builder: (_) => const AdminCreateCourseScreen()));
+            context,
+            MaterialPageRoute(builder: (_) => const AdminCreateCourseScreen()),
+          );
           _reloadCourses();
         },
         icon: const Icon(Icons.add_rounded, color: Colors.white),
-        label: Text('new_course'.tr(),
-            style: GoogleFonts.poppins(
-                color: Colors.white, fontWeight: FontWeight.bold)),
+        label: Text(
+          'new_course'.tr(),
+          style: GoogleFonts.poppins(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
       ),
     );
   }
 
-  // ============================================================
-  // 🎨 Semester Filter بأيقونات 3D
-  // ============================================================
   Widget _buildSemesterFilter() {
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
@@ -116,8 +131,13 @@ class _AdminCoursesScreenState extends State<AdminCoursesScreen> {
         children: [
           _filterChip('active', 'current_semester'.tr(), AppIcons.event),
           _filterChip('all', 'all_semesters'.tr(), AppIcons.dashboard),
-          ..._semesters.map((s) => _filterChip(
-              s['id'].toString(), s['name'] ?? '', AppIcons.event)),
+          ..._semesters.map(
+            (s) => _filterChip(
+              s['id'].toString(),
+              s['name'] ?? '',
+              AppIcons.event,
+            ),
+          ),
         ],
       ),
     );
@@ -136,31 +156,37 @@ class _AdminCoursesScreenState extends State<AdminCoursesScreen> {
           duration: const Duration(milliseconds: 200),
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
           decoration: BoxDecoration(
-            color: selected
-                ? AppColors.primary
-                : AppColors.primary.withOpacity(0.08),
+            color:
+                selected
+                    ? AppColors.primary
+                    : AppColors.primary.withOpacity(0.08),
             borderRadius: BorderRadius.circular(20),
             border: Border.all(
-                color: AppColors.primary.withOpacity(selected ? 1 : 0.2)),
-            boxShadow: selected
-                ? [
-                    BoxShadow(
-                      color: AppColors.primary.withOpacity(0.3),
-                      blurRadius: 8,
-                      offset: const Offset(0, 2),
-                    ),
-                  ]
-                : [],
+              color: AppColors.primary.withOpacity(selected ? 1 : 0.2),
+            ),
+            boxShadow:
+                selected
+                    ? [
+                      BoxShadow(
+                        color: AppColors.primary.withOpacity(0.3),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
+                      ),
+                    ]
+                    : [],
           ),
           child: Row(
             children: [
               AppIconImage(iconPath, size: 16),
               const SizedBox(width: 6),
-              Text(label,
-                  style: GoogleFonts.poppins(
-                      color: selected ? Colors.white : AppColors.primary,
-                      fontWeight: FontWeight.w600,
-                      fontSize: 12)),
+              Text(
+                label,
+                style: GoogleFonts.poppins(
+                  color: selected ? Colors.white : AppColors.primary,
+                  fontWeight: FontWeight.w600,
+                  fontSize: 12,
+                ),
+              ),
             ],
           ),
         ),
@@ -168,34 +194,33 @@ class _AdminCoursesScreenState extends State<AdminCoursesScreen> {
     );
   }
 
-  // ============================================================
-  // 🎨 Empty State بأيقونة 3D
-  // ============================================================
   Widget _emptyState() {
-    return ListView(children: [
-      const SizedBox(height: 100),
-      Center(
-        child: Opacity(
-          opacity: 0.5,
-          child: AppIconImage(AppIcons.book, size: 90),
+    return ListView(
+      children: [
+        const SizedBox(height: 100),
+        Center(
+          child: Opacity(
+            opacity: 0.5,
+            child: AppIconImage(AppIcons.book, size: 90),
+          ),
         ),
-      ),
-      const SizedBox(height: 15),
-      Center(
-        child: Text('no_courses_in_semester'.tr(),
-            style: GoogleFonts.poppins(color: getSecondaryTextColor(context))),
-      ),
-    ]);
+        const SizedBox(height: 15),
+        Center(
+          child: Text(
+            'no_courses_in_semester'.tr(),
+            style: GoogleFonts.poppins(color: getSecondaryTextColor(context)),
+          ),
+        ),
+      ],
+    );
   }
 
-  // ============================================================
-  // 🎨 Course Card بتصميم محسّن
-  // ============================================================
   Widget _courseCard(dynamic c) {
     final color = _parseColor(c['cover_color']);
     final status = (c['status'] ?? 'draft').toString();
     final (statusColor, statusLabel) = _statusInfo(status);
-    final enrollments = int.tryParse(c['enrollments_count']?.toString() ?? '0') ?? 0;
+    final enrollments =
+        int.tryParse(c['enrollments_count']?.toString() ?? '0') ?? 0;
     final lectures = int.tryParse(c['lectures_count']?.toString() ?? '0') ?? 0;
     final instructor = c['instructor_name']?.toString();
     final semesterName = c['semester_name']?.toString();
@@ -222,7 +247,8 @@ class _AdminCoursesScreenState extends State<AdminCoursesScreen> {
             await Navigator.push(
               context,
               MaterialPageRoute(
-                  builder: (_) => AdminCourseManagementScreen(course: c)),
+                builder: (_) => AdminCourseManagementScreen(course: c),
+              ),
             );
             _reloadCourses();
           },
@@ -238,28 +264,27 @@ class _AdminCoursesScreenState extends State<AdminCoursesScreen> {
                     gradient: LinearGradient(
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
-                      colors: [
-                        color.withOpacity(0.2),
-                        color.withOpacity(0.08),
-                      ],
+                      colors: [color.withOpacity(0.2), color.withOpacity(0.08)],
                     ),
                     borderRadius: BorderRadius.circular(14),
                     border: Border.all(color: color.withOpacity(0.3)),
                   ),
-                  child: Center(
-                    child: AppIconImage(AppIcons.book, size: 36),
-                  ),
+                  child: Center(child: AppIconImage(AppIcons.book, size: 36)),
                 ),
                 const SizedBox(width: 14),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(c['title'] ?? '',
-                          style: GoogleFonts.poppins(
-                              fontWeight: FontWeight.bold, fontSize: 14),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis),
+                      Text(
+                        c['title'] ?? '',
+                        style: GoogleFonts.poppins(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
                       const SizedBox(height: 4),
                       // اسم الدكتور بأيقونة teacher
                       Row(
@@ -270,11 +295,13 @@ class _AdminCoursesScreenState extends State<AdminCoursesScreen> {
                             child: Text(
                               instructor ?? 'no_instructor'.tr(),
                               style: GoogleFonts.poppins(
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w600,
-                                  color: instructor != null
-                                      ? AppColors.purple
-                                      : Colors.orange),
+                                fontSize: 11,
+                                fontWeight: FontWeight.w600,
+                                color:
+                                    instructor != null
+                                        ? AppColors.purple
+                                        : Colors.orange,
+                              ),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                             ),
@@ -288,12 +315,15 @@ class _AdminCoursesScreenState extends State<AdminCoursesScreen> {
                             AppIconImage(AppIcons.event, size: 12),
                             const SizedBox(width: 4),
                             Flexible(
-                              child: Text(semesterName,
-                                  style: GoogleFonts.poppins(
-                                      fontSize: 10,
-                                      color: getSecondaryTextColor(context)),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis),
+                              child: Text(
+                                semesterName,
+                                style: GoogleFonts.poppins(
+                                  fontSize: 10,
+                                  color: getSecondaryTextColor(context),
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
                             ),
                           ],
                         ),
@@ -320,8 +350,11 @@ class _AdminCoursesScreenState extends State<AdminCoursesScreen> {
                     ],
                   ),
                 ),
-                const Icon(Icons.arrow_forward_ios_rounded,
-                    size: 14, color: Colors.grey),
+                const Icon(
+                  Icons.arrow_forward_ios_rounded,
+                  size: 14,
+                  color: Colors.grey,
+                ),
               ],
             ),
           ),
@@ -330,9 +363,6 @@ class _AdminCoursesScreenState extends State<AdminCoursesScreen> {
     );
   }
 
-  // ============================================================
-  // 🎨 Status Badge بأيقونة
-  // ============================================================
   Widget _statusBadge(String status, Color color, String label) {
     String iconPath;
     if (status == 'published') {
@@ -355,9 +385,14 @@ class _AdminCoursesScreenState extends State<AdminCoursesScreen> {
         children: [
           AppIconImage(iconPath, size: 11),
           const SizedBox(width: 3),
-          Text(label,
-              style: TextStyle(
-                  color: color, fontSize: 9.5, fontWeight: FontWeight.bold)),
+          Text(
+            label,
+            style: TextStyle(
+              color: color,
+              fontSize: 9.5,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
         ],
       ),
     );

@@ -1,10 +1,3 @@
-// ============================================================
-// 🚫 MutedStudentsScreen — إدارة الطلاب المكتومين
-// ============================================================
-//
-// المكان: lib/features/chat/muted_students_screen.dart
-// ============================================================
-
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:easy_localization/easy_localization.dart';
@@ -54,23 +47,29 @@ class _MutedStudentsScreenState extends State<MutedStudentsScreen> {
   Future<void> _unmute(dynamic m) async {
     final confirm = await showDialog<bool>(
       context: context,
-      builder: (_) => AlertDialog(
-        shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16)),
-        title: Text('unmute_student'.tr()),
-        content: Text('unmute_confirm'
-            .tr()
-            .replaceAll('{name}', m['full_name'] ?? '')),
-        actions: [
-          TextButton(
-              onPressed: () => Navigator.pop(context, false),
-              child: Text('cancel'.tr())),
-          TextButton(
-              onPressed: () => Navigator.pop(context, true),
-              child: Text('unmute'.tr(),
-                  style: const TextStyle(color: Colors.green))),
-        ],
-      ),
+      builder:
+          (_) => AlertDialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+            title: Text('unmute_student'.tr()),
+            content: Text(
+              'unmute_confirm'.tr().replaceAll('{name}', m['full_name'] ?? ''),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: Text('cancel'.tr()),
+              ),
+              TextButton(
+                onPressed: () => Navigator.pop(context, true),
+                child: Text(
+                  'unmute'.tr(),
+                  style: const TextStyle(color: Colors.green),
+                ),
+              ),
+            ],
+          ),
     );
 
     if (confirm != true) return;
@@ -86,15 +85,15 @@ class _MutedStudentsScreenState extends State<MutedStudentsScreen> {
     if (result['status'] == 'success') {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('✅ ${'unmuted_successfully'.tr()}'),
+          content: Text(' ${'unmuted_successfully'.tr()}'),
           backgroundColor: Colors.green,
         ),
       );
       _load();
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(result['message'] ?? 'فشل')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(result['message'] ?? 'فشل')));
     }
   }
 
@@ -106,19 +105,21 @@ class _MutedStudentsScreenState extends State<MutedStudentsScreen> {
           children: [
             _buildHeader(),
             Expanded(
-              child: _loading
-                  ? const Center(child: CircularProgressIndicator())
-                  : RefreshIndicator(
-                      onRefresh: _load,
-                      child: _mutedList.isEmpty
-                          ? _empty()
-                          : ListView.builder(
-                              padding: const EdgeInsets.all(16),
-                              itemCount: _mutedList.length,
-                              itemBuilder: (_, i) =>
-                                  _mutedCard(_mutedList[i]),
-                            ),
-                    ),
+              child:
+                  _loading
+                      ? const Center(child: CircularProgressIndicator())
+                      : RefreshIndicator(
+                        onRefresh: _load,
+                        child:
+                            _mutedList.isEmpty
+                                ? _empty()
+                                : ListView.builder(
+                                  padding: const EdgeInsets.all(16),
+                                  itemCount: _mutedList.length,
+                                  itemBuilder:
+                                      (_, i) => _mutedCard(_mutedList[i]),
+                                ),
+                      ),
             ),
           ],
         ),
@@ -144,8 +145,11 @@ class _MutedStudentsScreenState extends State<MutedStudentsScreen> {
                 color: Colors.white.withOpacity(0.2),
                 shape: BoxShape.circle,
               ),
-              child: const Icon(Icons.arrow_back_ios_new_rounded,
-                  color: Colors.white, size: 16),
+              child: const Icon(
+                Icons.arrow_back_ios_new_rounded,
+                color: Colors.white,
+                size: 16,
+              ),
             ),
           ),
           const SizedBox(width: 12),
@@ -162,8 +166,7 @@ class _MutedStudentsScreenState extends State<MutedStudentsScreen> {
             ),
           ),
           Container(
-            padding:
-                const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
             decoration: BoxDecoration(
               color: Colors.white.withOpacity(0.25),
               borderRadius: BorderRadius.circular(10),
@@ -195,10 +198,7 @@ class _MutedStudentsScreenState extends State<MutedStudentsScreen> {
         Center(
           child: Text(
             'no_muted_students'.tr(),
-            style: GoogleFonts.poppins(
-              color: Colors.grey[600],
-              fontSize: 14,
-            ),
+            style: GoogleFonts.poppins(color: Colors.grey[600], fontSize: 14),
           ),
         ),
       ],
@@ -263,7 +263,9 @@ class _MutedStudentsScreenState extends State<MutedStudentsScreen> {
                 onTap: () => _unmute(m),
                 child: Container(
                   padding: const EdgeInsets.symmetric(
-                      horizontal: 12, vertical: 6),
+                    horizontal: 12,
+                    vertical: 6,
+                  ),
                   decoration: BoxDecoration(
                     color: Colors.green.withOpacity(0.12),
                     borderRadius: BorderRadius.circular(8),

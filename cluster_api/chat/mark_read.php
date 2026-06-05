@@ -27,4 +27,4 @@ $upd = $pdo->prepare("
 ");
 $upd->execute([':cid' => $courseId, ':uid' => $userId, ':mid' => $lastId]);
 
-sendSuccess(['last_read_message_id' => $lastId], '✅ تم التحديد');
+sendSuccess(['last_read_message_id' => $lastId], ' تم التحديد');

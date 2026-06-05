@@ -125,7 +125,6 @@ class _InstructorLectureAIViewScreenState
     }
   }
 
-  // ✅ النشر يشتغل دايماً
   Future<void> _publish() async {
     final res = await ApiService.publishAIContent(widget.lectureId);
     if (!mounted) return;
@@ -935,7 +934,6 @@ class _InstructorLectureAIViewScreenState
     );
   }
 
-  // ✅ تعديل السؤال + الخيارات + الجواب الصحيح
   void _showEditQuestionDialog(int index, Map q) {
     final questionController = TextEditingController(
       text: q['question']?.toString() ?? '',

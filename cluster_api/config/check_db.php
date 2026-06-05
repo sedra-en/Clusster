@@ -4,9 +4,9 @@ try {
     $db = new Database();
     $conn = $db->getConnection();
     if($conn) {
-        echo "✅ الاتصال بقاعدة البيانات ناجح!";
+        echo " الاتصال بقاعدة البيانات ناجح!";
     }
 } catch (Exception $e) {
-    echo "❌ فشل الاتصال: " . $e->getMessage();
+    echo " فشل الاتصال: " . $e->getMessage();
 }
 ?>

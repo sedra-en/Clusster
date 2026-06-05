@@ -30,4 +30,4 @@ $stmt->execute([
 sendSuccess([
     'course_id' => $courseId,
     'student_user_id' => $studentUserId,
-], '🚫 تم كتم الطالب');
+], ' تم كتم الطالب');

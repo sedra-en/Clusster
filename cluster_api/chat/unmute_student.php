@@ -23,4 +23,4 @@ if ($stmt->rowCount() === 0) {
     sendError('الطالب ليس مكتوماً');
 }
 
-sendSuccess(null, '✅ تم فك الكتم');
+sendSuccess(null, ' تم فك الكتم');

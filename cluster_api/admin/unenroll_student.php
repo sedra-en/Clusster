@@ -11,7 +11,7 @@ require_once '../helpers/response.php';
 $db   = (new Database())->getConnection();
 $data = json_decode(file_get_contents("php://input"));
 
-// نقبل إما enrollment_id مباشرة، أو الزوج (student_id + course_id)
+
 try {
     if (!empty($data->enrollment_id)) {
         $stmt = $db->prepare("DELETE FROM enrollments WHERE id = ?");

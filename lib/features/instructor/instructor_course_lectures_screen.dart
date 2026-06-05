@@ -1,8 +1,3 @@
-// ============================================================
-// lib/features/instructor/instructor_course_lectures_screen.dart
-// تبويبان: المحاضرات (PDF+صوت) + الملخصات
-// ============================================================
-
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -209,7 +204,7 @@ class _InstructorCourseLecturesScreenState
           child: Column(
             children: [
               _buildHeader(),
-              // ─── Tab Bar ─────────────────────────────
+
               Container(
                 margin: const EdgeInsets.fromLTRB(20, 14, 20, 8),
                 padding: const EdgeInsets.all(4),
@@ -262,7 +257,6 @@ class _InstructorCourseLecturesScreenState
     );
   }
 
-  // ─── تبويب المحاضرات (PDF + صوت) ────────────────────────
   Widget _lecturesTab() {
     if (_lectures.isEmpty) {
       return _emptyState('no_lectures_yet'.tr());
@@ -295,7 +289,6 @@ class _InstructorCourseLecturesScreenState
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // ─── صف العنوان
             Row(
               children: [
                 Icon(Icons.menu_book_rounded, size: 20, color: widget.color),
@@ -344,7 +337,6 @@ class _InstructorCourseLecturesScreenState
 
             const SizedBox(height: 10),
 
-            // ─── أزرار الملفات
             Row(
               children: [
                 if (filePath.isNotEmpty && contentType != 'audio')
@@ -397,7 +389,6 @@ class _InstructorCourseLecturesScreenState
     );
   }
 
-  // ─── تبويب الملخصات ──────────────────────────────────────
   Widget _summariesTab() {
     if (_lectures.isEmpty) {
       return _emptyState('no_lectures_yet'.tr());

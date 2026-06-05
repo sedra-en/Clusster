@@ -13,7 +13,7 @@ $data = json_decode(file_get_contents("php://input"));
 
 if (empty($data->id)) sendError("id المقرر مطلوب");
 
-// نبني الاستعلام ديناميكياً حسب الحقول الممرّرة
+
 $fields = [];
 $params = ['id' => (int)$data->id];
 
@@ -56,7 +56,7 @@ try {
     $stmt->execute($params);
 
     if ($stmt->rowCount() === 0) {
-        // قد يكون المقرر موجود لكن القيم نفسها — نتأكد من وجوده
+        
         $check = $db->prepare("SELECT id FROM courses WHERE id = ?");
         $check->execute([$data->id]);
         if (!$check->fetch()) sendError("المقرر غير موجود", 404);

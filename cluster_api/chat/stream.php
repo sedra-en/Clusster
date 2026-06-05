@@ -42,7 +42,7 @@ if (!checkCourseAccess($pdo, $userId, $courseId)) {
 }
 
 sendSSEEvent('connected', [
-    'message'   => '✅ متصل',
+    'message'   => ' متصل',
     'course_id' => $courseId,
     'user_id'   => $userId,
 ]);
