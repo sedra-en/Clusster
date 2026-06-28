@@ -1,16 +1,27 @@
-# cluster_app
+# Clusster — AI-Powered Student Learning Assistant
 
-A new Flutter project.
+An intelligent mobile app that transforms lecture recordings, 
+whiteboard images, and files into structured, reviewable content.
 
-## Getting Started
+## Problem
+Students struggle to take notes, review lectures, and self-assess 
+understanding — especially with mixed audio/visual content.
 
-This project is a starting point for a Flutter application.
+## Features
+-  Audio-to-text transcription (Arabic & English) using Whisper
+-  Whiteboard image analysis using VLM/OCR
+-  Automatic AI-generated summaries (LLM)
+-  Smart quiz generation for self-assessment
+-  Unified lecture management (audio + image + text)
+-  Cloud sync — accessible from any device
 
-A few resources to get you started if this is your first Flutter project:
+## Tech Stack
+Python · Dart · Flutter · MySQL  
+Whisper · VLM · LLM · Google Colab · Figma
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+## Platform
+Cross-platform mobile app (iOS & Android)
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+## Team
+Graduation project — Al-Sham Private University (2025–2026)
+Role: AI + Backend Lead
